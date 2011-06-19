@@ -15,9 +15,9 @@ void asmem_initialize(
                         int withdrawn,
                         int iconic,
                         int pushed_in);
-void asmem_update();
-void asmem_redraw();
-void asmem_cleanup();
+void asmem_update(void);
+void asmem_redraw(void);
+void asmem_cleanup(void);
 
 #endif
 

@@ -30,7 +30,7 @@ int     pushed_in = 1;
 char    display_name[50];
 char    mainGeometry[50];
 
-void defaults()
+void defaults(void)
 {
 	state.update_interval = CHK_INTERVAL;
 	state.standard_free = 0;
@@ -51,7 +51,7 @@ void defaults()
 }
 
 /* print the usage for the tool */
-void usage() 
+void usage(void) 
 {
         printf("Usage : asmem [options ...]\n\n");
         printf("-V              print version and exit\n");
@@ -77,7 +77,7 @@ void usage()
 }       
 
 /* print the version of the tool */
-void version()
+void version(void)
 {
         printf("asmem : AfterStep memory utilization monitor version 1.10\n");
 }               
@@ -168,7 +168,7 @@ void    parsecmdline(int argc, char *argv[])
  
 }
 
-void main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	defaults();
 	parsecmdline(argc, argv);
@@ -182,5 +182,7 @@ void main(int argc, char** argv)
 		asmem_update();
 		usleep(X11_INTERVAL);
 	}
+
+	return 0;
 }
 
