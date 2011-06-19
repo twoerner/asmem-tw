@@ -1,65 +1,18 @@
-asmem is a memory utilization monitor utility for X Windows.
-Copyright (c) 1999-2003  Albert "Tigr" Dorofeev <albert@tigr.net>
-For the updates check http://www.tigr.net/
+asmem-tw is a small GUI memory usage tracking in Xlib.
 
-Description:
-============
+Copyright (C) 2011  Trevor Woerner <twoerner@gmail.com>
 
-This is an AfterStep look & feel memory utilization monitor
-for X Windows.
+I had been using the "asmem" utility from Albert "Tigr" Dorofeev
+<albert@tigr.net> for decades. One day I was using a machine with lots of
+memory and noticed the asmem utility wasn't working correctly. I looked into
+the sources and updated to get it to work. I personally was only using it on
+Linux machines so while updating the code I also removed any that wasn't
+useful for me.
 
-I used this asmem tool written by alinden@netcologne.de
-for quite a while. It served the purpose but I was very
-unsatisfied with its appearance. I wanted something that
-would fit nicely between all other applets on my desktop.
-I tried to contact the author a few times but got no answer.
-So I decided to rewrite it from scratch and give it the look 
-and options that I personally like. I hope the author of 
-the original asmem will not be too angry with me.
+I started with the sources for asmem-1.10, so it is safe to say this project
+is based on the other one. But how much of the original remains in the final
+is to be seen. "Not much" is what I'd guess.
 
-The display consists of two areas. The one above shows utilization
-of the memory, the one below - the utilization of the swap
-space. Each area contains a graphical bar that represents the
-percentage of the available space. For the memory utilization
-there are three bars: user/system memory used, buffer memory
-and cache memory. For the swap space only one bar showing the
-used space. Above each bar is the total amount of space, below
-the bar - the available space in kbytes and percents. If the
-memory amount is above 999999 kbytes the displays switches
-to Mbytes instead of kbytes.
-
-The program may be used directly or in the Afterstep "wharf". It also 
-supports the WindowMaker docker (-withdrawn option). It may be used 
-in all other window managers as well. It runs well as an icon.
-
-You may want to have a look in the CHANGES file for the history of updates.
-
-Credits:
-========
-
-The original idea from alinden@netcologne.de who wrote the
-asmem version 0.1.
-
-There may be some other people's code carried over from asapm. See 
-asapm's README for detailed credits.
-
-The patch for NetBSD is Copyright (c) 2000 Scott Bamford <sab@zeekuschrist.com>
-and that part of the code is distributed under BSD style license.
-
-The port to FreeBSD is supplied by Andre Yelistratov <andre@express.ru>
-and is based on the program swapinfo by Kevin Lahey <kml@rokkaku.atl.ga.us>
-
-Patch for Linux 2.6 kernel by Phil DeBecker <debecker@ntplx.net>.
-
-Distribution:
-=============
-
-The application and the source code are under GPL. See LICENSE 
-file for details.
-
-Naturally, I would like to hear of all changes and improvements 
-made to this utility.
-
-Enjoy and may the source be with you,
-Albert "Tigr"
-
+I emailed Albert with my updates, but he didn't seem too interested (which is
+understandable). So I hope he doesn't mind me making this forked project
+publicly available.
