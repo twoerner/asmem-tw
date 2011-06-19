@@ -1,0 +1,95 @@
+18 Sep 2003	1.10	albert@tigr.net
+
+		Patch from Phil DeBecker <debecker@ntplx.net>:
+		 Asmem doesn't work on Linux 2.6 because the format 
+		 of /proc/meminfo changed -- basically the nice summary 
+		 lines at the head of the output are gone, so you only 
+		 have the individual fields.  The little patch I've 
+		 written modifies read_mem.c so that it looks for each of
+		 these individual fields in order to populate the memory 
+		 stats.  This works on 2.4 kernels as well, since it 
+		 doesn't rely on the length or specific position of each 
+		 of the labels, only on the order in which they appear.
+
+21 Oct 2001	1.9	albert@tigr.net
+
+		Patch from Alexander Kotelnikov <sacha@debian.org>
+		that makes sure asmem compiles on Hurd.
+
+20 Jul 2000	1.8	albert@tigr.net
+
+		Another patch by Andre Yelistratov <andre@express.ru>:
+		"Well, it seems to be a problem with CPU load in newly 
+		implemented system call in FreeBSD 4.0, therefore I have 
+		attached asmem.diff, containing patch for this problem..."
+
+16 Jun	2000	1.7	albert@tigr.net
+
+		Andre Yelistratov <andre@express.ru> ported asmem
+		to FreeBSD. This port should work fine with most
+		FreeBSD flavours. Verified on 2.2.4, 3.4, 4.0.
+
+09 Feb 2000	1.6	albert@tigr.net
+
+		Scott  Bamford <sab@zeekuschrist.com> has created
+		a patch for NetBSD:
+
+		"Heres a patch i made to it to alow it to work on NetBSD. 
+		As far as i know it should be compatible with any which 
+		use UVM (does OpenBSD?)."
+
+		This addition to the asmem code is distributed
+		under BSD style license.
+
+16 Dec 1999	1.5	albert@tigr.net
+
+		Changed the internal loop to react to the absolute
+		value of the difference in time for the update.
+		Suggested by Nicola Bernardini <nicb@axnet.it>
+
+09 Sep 1999	1.4	albert@tigr.net
+		
+		Yes, it is still me. I just found that some
+		people may not have swap space (however weird
+		this sounds) so I fixed a potential bug with
+		division by zero.
+
+23 Jul 1999	1.3	albert@mail.dma.be
+
+		Suddenly I decided that I do not want to see
+		the amount of memory available but the amount
+		of memory consumed. Voila. There it is - a yet
+		another switch.
+
+07 Jun 1999	1.2	albert@mail.dma.be
+
+		Anders Rundegren <anders@rundegren.com> writes:
+		"Wouldn't it be nice if there was a switch to make asmem 
+		display memory usage in MegaBytes instead of kiloBytes... 
+		it gets pretty cluttered when  all those numbers are 
+		shown in that little window!?"
+		Ok, done :) the -mb switch.
+
+08 Mar 1999	1.1	albert@mail.dma.be
+
+		Added the '-free' switch to be able
+		to see the values returned by the /proc/meminfo
+		for the free memory instead of the values
+		calculated by the applet.
+
+		Changed the /proc/meminfo reading routines
+		and the screen updating in an attempt to minimize
+		CPU consumption. Mmmmm... it kinda worked out :)
+		You can say asmem is optimized a bit now.
+
+02 Mar 1999	1.0	albert@mail.dma.be
+
+		Completely rewritten from scratch.
+		The new version is not based on the code
+		from 0.1, only the idea is the same.
+
+20 Oct 1998	albert@mail.dma.be asmem-0.1-1
+
+		Added options -noborder and -v and created
+		a manpage.
+

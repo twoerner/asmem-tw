@@ -1,0 +1,13 @@
+# AfterStepApps standard Makefile and autoconf/ ; do not edit
+
+OBJS = asmem.o asmem_x.o read_mem.o x_color.o safecopy.c
+
+PROG = asmem
+
+@MAKEFILECOMMON@
+
+config:
+	autoconf --localdir=autoconf autoconf/configure.in > \
+	configure ; chmod 755 configure
+	autoheader --localdir=autoconf autoconf/configure.in > \
+	autoconf/config.h.in ; chmod 644 autoconf/config.h.in

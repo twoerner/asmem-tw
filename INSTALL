@@ -1,0 +1,40 @@
+DEPENDENCIES
+============
+For asmem you need xpm library. From the xpmlib manual:
+New XPM updates are announced on the comp.windows.x newsgroup, and on the
+"xpm-talk" list. All new "official" XPM releases can be found by ftp on:
+
+    ftp.x.org          (18.112.44.100) contrib   (Boston, USA)
+    koala.inria.fr     (138.96.24.30) pub/xpm    (Sophia Antipolis, France)
+
+INSTALLATION WITH autoconf
+==========================
+To install the asmem on your system:
+
+        ./configure
+
+	make
+
+	make install
+
+
+INSTALLATION WITHOUT autoconf
+=============================
+To install the asmem on your system:
+	
+	Copy the Makefile.UNIX to Makefile
+
+	check if the paths are correct for
+	your system in the Makefile
+
+	make
+
+	make install
+
+
+NOTE for FreeBSD installations
+==============================
+The FreeBSD version accesses protected structures in the memory to
+collect the information. This is why it needs to be installed
+SGID kmem.
+

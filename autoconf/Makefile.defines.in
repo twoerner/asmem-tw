@@ -1,0 +1,52 @@
+#
+# Copyright (c) 1998, Guylhem AZNAR <guylhem@oeil.qc.ca>
+#
+
+CC		= @CC@
+CCFLAGS         = @CFLAGS@
+# -march=pentiumpro -mcpu=pentiumpro
+
+RANLIB		= @RANLIB@
+AR		= ar clq
+CP		= @CP@
+MV		= @MV@
+RM		= @RM@
+RMF		= @RM@ -f
+MKDIR		= @MKDIR@
+STRIP		= @STRIP@
+
+YACC		= @YACC@
+LEX		= @LEX@
+YACCFLAGS	= -d
+LEXFLAGS	=
+INSTALL_MODE	= @INSTALL_MODE@
+
+INSTALL		= @INSTALL@
+INSTALL_PROGRAM	= @INSTALL@ -s @INSTALL_MODE@
+INSTALL_DATA	= @INSTALL@ -m 644
+
+INCS_X		= @X_CFLAGS@
+INCS_XPM	= @XPM_CFLAGS@
+INCLUDES	= $(INCS_X) $(INCS_XPM)
+
+LIBS_X		= @X_LIBS@ @x_libs@
+LIBS_XPM	= 
+LIBS_JPEG	= @JPEG_LIB@
+LIBS_XEXTS	= 
+LIBS_AFTERSTEP	= 
+KVM_LIB		= @KVM_LIB@
+LIBRARIES	= $(LIBS_X) $(LIBS_XPM) $(LIBS_JPEG) $(LIBS_XEXTS) $(LIBS_AFTERSTEP) $(KVM_LIB)
+
+AFTER_BIN_DIR	= @bindir@
+AFTER_MAN_DIR	= @mandir@/man1
+AFTER_DOC_DIR	= @datadir@/afterstep/doc
+AFTER_SHAREDIR	= @datadir@/afterstep
+GNUSTEP		= @with_gnustep_dir@
+GNUSTEPLIB	= @with_gnustep_lib@
+AFTER_DIR	= @with_afterdir@
+AFTER_SAVE	= @with_afterdir@/.workspace_state
+AFTER_NONCF	= @with_afterdir@/non-configurable
+
+#
+# End of Make.defines
+#

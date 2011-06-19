@@ -1,0 +1,39 @@
+#
+# Copyright (c) 1998, Guylhem AZNAR <guylhem@oeil.qc.ca>
+#
+
+@MAKEFILEDEFINES@
+
+all:            $(PROG)
+
+install:	
+		# do nothing
+
+install.man:
+		# do nothing
+
+uninstall:
+		# do nothing
+
+clean:
+		$(RMF) $(PROG) *.o *~ *% *.bak \#* core
+
+distclean:
+		$(RMF) $(PROG) config.cache config.log config.status Makefile.bak Makefile config.h configure.h *.o *~ *% *.bak \#* core
+
+indent:
+		SRCS=`echo "$(OBJS) " | sed "s/.o /.c /g"`; \
+		for i in $$SRCS; do \
+		  if (indent < $$i > /tmp/$$i); then \
+		    mv /tmp/$$i $$i; \
+		  fi; \
+		done
+
+$(PROG):	$(OBJS)
+		$(RMF) $(PROG)
+		$(AR) $(PROG) $(OBJS)
+		$(RANLIB) $(PROG)
+
+.c.o:
+		$(CC) $(CCFLAGS) $(EXTRA_DEFINES) $(INCLUDES) $(EXTRA_INCLUDES) -c $*.c
+

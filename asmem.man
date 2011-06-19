@@ -1,0 +1,208 @@
+.TH asmem 1 "18 September 2003" "Version 1.10"
+.UC
+.SH NAME
+\fBasmem\fP \- the AfterStep memory utilization monitor
+.SH SYNOPSIS
+.B asmem
+[-h] [-H] [-V]
+        [-iconic] [-withdrawn] [-standout]
+        [-used] [-asis] [-free] [-mb]
+        [-position \fI[+|-]x[+|-]y\fP]
+        [-u \fIupdate rate\fP]
+        [-dev \fIdevice\fP]
+        [-display \fIdisplay\fP]
+        [-bg \fIcolor\fP]
+        [-fg \fIcolor\fP]
+        [-memory \fIcolor\fP]
+        [-buffer \fIcolor\fP]
+        [-cache \fIcolor\fP]
+        [-swap \fIcolor\fP]
+.SH DESCRIPTION
+The \fBasmem\fP is a X11 application that acts as
+a memory utilization monitor. It shows the current
+amount of memory and swap space, the free amounts
+of those, and the bars representing graphically the
+different types of memory.
+
+The display consists of two areas. The one above shows utilization
+of the memory, the one below - the utilization of the swap
+space. Each area contains a graphical bar that represents the
+percentage of the occupied space. For the memory utilization
+there are three bars: user/system memory used, buffer memory
+and cache memory. For the swap space only one bar showing the
+used space. Above each bar is the total amount of space, below
+the bar - the available space in kbytes and percents. If the
+memory amount is above 999999 kbytes the displays switches
+to Mbytes instead of kbytes.
+
+It is possible to force the display into Mbytes. You can also
+ask asmem to display the occupied memory amounts and percentages
+rather than those still available.
+
+.SH CONFIGURATION OPTIONS
+.IP "-h or -H"
+.RS
+Prints a short description and usage message.
+.RE
+.IP "-V"
+.RS
+Version control. Prints out the version of the program.
+.RE
+.IP "-position [+|-]x[+|-]y"
+.RS
+Displays the window at the specified location
+on the screen. This works like the standard X Windows
+geometry option. (See XParseGeometry (3x)).
+.RE
+.IP "-iconic"
+.RS
+Starts the \fBasmem\fP application in the iconized mode.
+The icon has the same appearance with the main
+window.
+When this option is given, the -position refers to
+the position of the icon window as well as the main window.
+.RE
+.IP "-withdrawn"
+.RS
+Starts the \fBasmem\fP application in the withdrawn mode.
+This option is necessary to be able to dock the
+\fBasmem\fP in the WindowMaker dock.
+When this option is given, the -position refers to
+the position of the icon window as well as the main window.
+\fBasmem\fP ignores the -iconic option when started
+in withdrawn mode.
+.RE
+.IP "-standout"
+.RS
+This changes the appearance of the \fBasmem\fP display from
+"pushed-in" to "popped-out". The first is the default look.
+The "popped-out" applets look much better in WindowMaker's dock
+according to some opinions. Give it a try in any case.
+.RE
+.IP "-used"
+.RS
+By default \fBasmem\fP displays the amount of memory or swap
+space still left unused. This switch tells \fBasmem\fP to
+display the amounts of memory and swap space already in use.
+This switch affects the percentages displayed in accordance.
+.RE
+.IP "-asis"
+.RS
+Uses an alternative number for the display of the free memory.
+Or, rather, by default an alternative amount is used. When this
+switch is specified, the applet displays the amount of memory
+free as reported by the /proc/meminfo. Sometimes this is not
+really helpful since the occupied memory includes the file system
+cache and the buffers space. When this switch is not specified
+\fBasmem\fP will add the cache space and the buffer space to the
+amount of the actual free memory since both of those may be
+discarded by the OS to free up some memory for the programs.
+.RE
+.IP "-free"
+.RS
+Exactly the same as \fB-asis\fP. Provided for backward
+compatibility. Obsolete. Do not use. Use \fB-asis\fP instead.
+.RE
+.IP "-mb"
+.RS
+Force the display in MBytes instead of kilobytes even if
+the numbers would fit into the window.
+.RE
+.IP "-u <update rate>"
+.RS
+Changes the polling rate for updating the memory 
+utilization information.
+The update rate is specified in seconds. The value
+of 1 is the minimum. Default value is 1 second.
+.RE
+.IP "-dev <device>"
+.RS
+The device that should be polled for the memory utilization
+information. On Linux, this defaults to \fI/proc/meminfo\fP
+.RE
+.IP "-display <name>"
+.RS
+The name of the display to start the window in.
+It works just as X Windows display option.
+.RE
+.IP "-bg <color>"
+.RS
+Changes the color of the background of the applet.
+Default colour is #303030.
+.RE
+.IP "-fg <color>"
+.RS
+Changes the color of the foreground of the applet.
+Default colour is #20b2aa.
+.RE
+.IP "-memory <color>"
+.RS
+Changes the color of the bar that represents the used
+memory amount.
+Default colour is #4141d7.
+.RE
+.IP "-buffer <color>"
+.RS
+Changes the color of the bar that represents the memory
+used for buffers.
+Default colour is #aa80aa.
+.RE
+.IP "-cache <color>"
+.RS
+Changes the color of the bar that represents the memory
+used for caching.
+Default colour is #bebebe.
+.RE
+.IP "-swap <color>"
+.RS
+Changes the color of the bar that represents the swap
+space utilization level.
+Default colour is #ffa649.
+.RE
+.SH INVOCATION
+\fBasmem\fP can be called in different ways.  The most 
+common invocation is the command line:
+.nf
+
+	user@host[1]% asmem -bg blue -fg white &
+
+.fi
+Another way to call \fBasmem\fP is from the window manager:
+.nf
+
+	*Wharf "asmem" nil Swallow "asmem" asmem &
+
+.fi
+This line, when placed in the \fIwharf\fP file in the user's Afterstep
+configuration directory will cause \fBasmem\fP to be a
+button on the \fBWharf (1)\fP button bar under the \fBafterstep (1)\fP
+window manager.
+
+If you run WindowMaker then you should use the "-withdrawn"
+option:
+.nf
+
+	user@host[1]% asmem -withdrawn -standout &
+
+.fi
+and then drag the icon to the dock.
+.SH BUGS
+My programs do not have bugs, they just develop random
+features ;-)
+.PP
+Well, there are limitations. All the strings for the
+color names, display name, and the geometry have the
+length limit of 50 characters (terminating zero included). 
+The string copying routine cuts the names that are longer.
+.SH "SEE ALSO"
+.BR proc (5)
+.SH COPYRIGHTS
+Copyright (c) 1999-2003  Albert "Tigr" Dorofeev <albert@tigr.net>
+
+Distributed under GNU General Public License v2 ; 
+see LICENSE file for more informations.
+.SH AUTHORS
+Albert "Tigr" Dorofeev <albert@tigr.net>
+
+See the README file for credits.
+.sp
