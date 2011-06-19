@@ -21,7 +21,7 @@ int fd;
 FILE *fp;
 char buf[BUFFER_LENGTH];
 
-void error_handle( int place, const char * message )
+static void error_handle( int place, const char * message )
 {
 	int error_num;
 	error_num = errno;
@@ -77,7 +77,7 @@ void error_handle( int place, const char * message )
 
 /* default /proc/meminfo (Linux) method ... */
 
-int getnum(FILE *fp, char *marker)
+static int getnum(FILE *fp, char *marker)
 {
 	char thebuf[255];
 	int done = 0;

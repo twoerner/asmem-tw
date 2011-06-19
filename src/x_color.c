@@ -36,7 +36,7 @@ Pixel GetColor(char *ColorName, Display * disp, Window win)
  * Performs the same actions as GetColor but
  * returns the complete XColor structure
  */
-XColor ParseColor(char *ColorName, Display * disp, Window win)
+static XColor ParseColor(char *ColorName, Display * disp, Window win)
 {
     XColor Color;
     XWindowAttributes Attributes;

@@ -32,36 +32,36 @@ typedef struct _XpmIcon {
     XpmAttributes attributes;
 } XpmIcon;
 
-XpmIcon backgroundXpm;
-XpmIcon alphabetXpm;
+static XpmIcon backgroundXpm;
+static XpmIcon alphabetXpm;
 
 /* X windows related global variables */
-Display * mainDisplay = 0;      /* The display we are working on */
-Window Root;                    /* The root window of X11 */
-Window drawWindow;              /* A hidden window for drawing */
-Window mainWindow;              /* Application window */
-Window iconWindow;              /* Icon window */
-XGCValues mainGCV;              /* graphics context values */
-GC mainGC;                      /* Graphics context */
-Atom wm_delete_window;
-Atom wm_protocols;
+static Display * mainDisplay = 0;      /* The display we are working on */
+static Window Root;                    /* The root window of X11 */
+static Window drawWindow;              /* A hidden window for drawing */
+static Window mainWindow;              /* Application window */
+static Window iconWindow;              /* Icon window */
+static XGCValues mainGCV;              /* graphics context values */
+static GC mainGC;                      /* Graphics context */
+static Atom wm_delete_window;
+static Atom wm_protocols;
 
-Pixel back_pix, fore_pix;
+static Pixel back_pix, fore_pix;
 
 /* background pixmap colors */
-char bgpixmap_color[4][50];
-char alphabet_color[4][50];
+static char bgpixmap_color[4][50];
+static char alphabet_color[4][50];
 
 /* pixels we need */
-Pixel pix[4][3];
+static Pixel pix[4][3];
 
 /* last time we updated */
-time_t last_time = 0;
+static time_t last_time = 0;
 
 /* requests for update */
-int update_request = 0;
+static int update_request = 0;
 
-void draw_window(Window win)
+static void draw_window(Window win)
 {
 	int points[3];
 	unsigned int total;
@@ -363,7 +363,7 @@ void draw_window(Window win)
  * stuff and exits. It is called in case
  * of emergencies .
  */             
-void asmem_cleanup()
+static void asmem_cleanup()
 {
         if ( mainDisplay ) {
                 XCloseDisplay(mainDisplay);
@@ -377,7 +377,7 @@ void asmem_cleanup()
  * - request to repaint the window
  * - request to quit (Close button)
  */
-void CheckX11Events()
+static void CheckX11Events()
 {
         XEvent Event;
         while (XPending(mainDisplay)) { 
@@ -403,7 +403,7 @@ void CheckX11Events()
         }
 }
 
-void asmem_redraw()
+static void asmem_redraw()
 {
 	XCopyArea(
 			mainDisplay,

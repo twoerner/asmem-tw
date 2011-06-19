@@ -23,13 +23,13 @@ extern struct asmem_state state;
 #define X11_INTERVAL    10000L
 #define CHK_INTERVAL    1
 
-int     withdrawn = 0;
-int     iconic = 0;
-int     pushed_in = 1;
-char    display_name[50];
-char    mainGeometry[50];
+static int withdrawn = 0;
+static int iconic = 0;
+static int pushed_in = 1;
+static char display_name[50];
+static char mainGeometry[50];
 
-void defaults(void)
+static void defaults(void)
 {
 	state.update_interval = CHK_INTERVAL;
 	state.standard_free = 0;
@@ -50,7 +50,7 @@ void defaults(void)
 }
 
 /* print the usage for the tool */
-void usage(void) 
+static void usage(void) 
 {
         printf("Usage : asmem [options ...]\n\n");
         printf("-V              print version and exit\n");
@@ -76,12 +76,12 @@ void usage(void)
 }       
 
 /* print the version of the tool */
-void version(void)
+static void version(void)
 {
         printf("asmem : AfterStep memory utilization monitor version 1.10\n");
 }               
 
-void    parsecmdline(int argc, char *argv[])
+static void    parsecmdline(int argc, char *argv[])
 {
         char    *argument;
         int     i;
