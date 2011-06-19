@@ -1,0 +1,5 @@
+config.h.in
+config.h.in~
+depcomp
+install-sh
+missing
