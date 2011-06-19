@@ -1,12 +1,11 @@
-#ifndef _safecopy_h_
-#define _safecopy_h_
-
 /*
- * Copyright (c) 1998  Albert Dorofeev <Albert@mail.dma.be>
- * For the updates see http://bewoner.dma.be/Albert/
+ * Copyright (C) 2011  Trevor Woerner
  * 
  * This software is distributed under GPL. For details see LICENSE file.
  */
+
+#ifndef _safecopy_h_
+#define _safecopy_h_
 
 /*
  * Copies at most maxlen-1 characters from the source.

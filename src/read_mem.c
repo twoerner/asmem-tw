@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 1999-2003  Albert Dorofeev <albert@tigr.net>
- * For the updates see http://www.tigr.net/
+ * Copyright (C) 2011  Trevor Woerner
  *
  * This software is distributed under GPL. For details see LICENSE file.
  */

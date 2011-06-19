@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 1998  Albert Dorofeev <Albert@mail.dma.be>
- * For the updates see http://bewoner.dma.be/Albert/
+ * Copyright (C) 2011  Trevor Woerner
  *
  * This software is distributed under GPL. For details see LICENSE file.
  */
