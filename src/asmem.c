@@ -8,10 +8,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "safecopy.h"
+#include <getopt.h>
 
+#include "safecopy.h"
 #include "asmem_x.h"
 #include "state.h"
+
 #include "config.h"
 
 extern AsmemState_t state_G;
@@ -56,26 +58,25 @@ static void
 usage (void)
 {
 	printf ("usage: asmem [options ...]\n\n");
-	printf ("-V              print version and exit\n");
-	printf ("-h -H -help     print this message\n");
-	printf ("-u <secs>       the update interval in seconds\n");
-	printf ("-mb             the display is in MBytes\n");
-	printf ("-used           display used memory instead of free\n");
-	printf ("-display <name> the name of the display to use\n");
-	printf ("-position <xy>  position on the screen (geometry)\n");
-	printf ("-withdrawn      start in withdrawn shape (for WindowMaker)\n");
-	printf ("-iconic         start iconized\n");
-	printf ("-standout       standing out rather than being pushed in\n");
-	printf ("-asis           use free memory amount as read from device\n");
-	printf ("-dev <device>   use the specified file as stat device\n\n");
-	printf ("-bg <color>     background color\n");
-	printf ("-fg <color>     base foreground color\n");
-	printf ("-memory <color> used memory bar color\n");
-	printf ("-buffer <color> buffer memory bar color\n");
-	printf ("-cache <color>  cache memory bar color\n");
-	printf ("-swap <color>   used swap space bar color\n");
+	printf ("-V | --version             print version and exit\n");
+	printf ("-h | -H | --help           print this message and exit\n");
+	printf ("-u | --update <secs>       the update interval in seconds\n");
+	printf ("--mb                       the display is in MBytes\n");
+	printf ("--used                     display used memory instead of free\n");
+	printf ("--display <name>           the name of the display to use\n");
+	printf ("--position <xy>            position on the screen (geometry)\n");
+	printf ("--withdrawn                start in withdrawn shape (for WindowMaker)\n");
+	printf ("--iconic                   start iconized\n");
+	printf ("--standout                 standing out rather than being pushed in\n");
+	printf ("--asis                     use free memory amount as read from device\n");
+	printf ("--dev <device>             use the specified file as stat device\n");
+	printf ("--bg <color>               background color\n");
+	printf ("--fg <color>               base foreground color\n");
+	printf ("--memory <color>           used memory bar color\n");
+	printf ("--buffer <color>           buffer memory bar color\n");
+	printf ("--cache <color>            cache memory bar color\n");
+	printf ("--swap <color>             used swap space bar color\n");
 	printf ("\n");
-	exit (0);
 }
 
 /* print the version of the tool */
@@ -88,87 +89,110 @@ version (void)
 static void
 parse_cmdline (int argc, char *argv[])
 {
-	char *arg_p;
-	int  i;
+	struct option longOpts[] = {
+		{"version", no_argument, NULL, 'V'},
+		{"help", no_argument, NULL, 'h'},
+		{"update", required_argument, NULL, 'u'},
+		{"mb", no_argument, NULL, 0},
+		{"used", no_argument, NULL, 1},
+		{"display", required_argument, NULL, 2},
+		{"position", required_argument, NULL, 3},
+		{"withdrawn", no_argument, NULL, 4},
+		{"iconic", no_argument, NULL, 5},
+		{"standout", no_argument, NULL, 6},
+		{"asis", no_argument, NULL, 7},
+		{"dev", required_argument, NULL, 8},
+		{"bg", required_argument, NULL, 9},
+		{"fg", required_argument, NULL, 10},
+		{"memory", required_argument, NULL, 11},
+		{"buffer", required_argument, NULL, 12},
+		{"cache", required_argument, NULL, 13},
+		{"swap", required_argument, NULL, 14},
+		{NULL, 0, NULL, 0},
+	};
 
-	/* parse the command line */
-	for (i=1; i<argc; i++) {
-		arg_p = argv[i];
-		if (arg_p[0] == '-') {
-			if (!strncmp (arg_p, "-withdrawn", 10)) {
-				withdrawn_G = 1;
-			} else if (!strncmp (arg_p, "-iconic", 7)) {
-				iconic_G = 1;
-			} else if (!strncmp (arg_p, "-standout", 9)) {
-				pushedIn_G = 0;
-			} else if (!strncmp (arg_p, "-asis", 5)) {
-				state_G.standard_free = 1;
-			} else if (!strncmp (arg_p, "-free", 5)) {
-				state_G.standard_free = 1;
-			} else if (!strncmp (arg_p, "-mb", 3)) {
-				state_G.mb = 1;
-			} else if (!strncmp (arg_p, "-used", 5)) {
-				state_G.show_used=1;
-			} else if (!strncmp (arg_p, "-u", 2)) {
-				if (++i >= argc)
-					usage();
-				state_G.update_interval = atoi (argv[i]);
-				if (state_G.update_interval < 1)
-					state_G.update_interval = CHK_INTERVAL;
-			} else if (!strncmp (arg_p, "-position", 9)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (mainGeometry_G, argv[i], 50);
-			} else if (!strncmp (arg_p, "-display", 8)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (displayName_G, argv[i], 50);
-			} else if (!strncmp (arg_p, "-dev", 4)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.proc_mem_filename, argv[i], 256);
-			} else if (!strncmp (arg_p, "-bg", 3)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.bgcolor, argv[i], 50);
-			} else if (!strncmp (arg_p, "-fg", 3)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.fgcolor, argv[i], 50);
-			} else if (!strncmp (arg_p, "-memory", 7)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.memory_color, argv[i], 50);
-			} else if (!strncmp (arg_p, "-buffer", 7)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.buffer_color, argv[i], 50);
-			} else if (!strncmp (arg_p, "-cache", 6)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.cache_color, argv[i], 50);
-			} else if (!strncmp (arg_p, "-swap", 5)) {
-				if (++i >= argc)
-					usage ();
-				safe_copy (state_G.swap_color, argv[i], 50);
-			} else if (!strncmp (arg_p, "-V", 2)) {
+	while (1) {
+		int c;
+
+		c = getopt_long (argc, argv, "VhHu:", longOpts, NULL);
+		if (c == -1)
+			break;
+
+		switch (c) {
+			case 'V':
 				version ();
 				exit (0);
-			} else if (!strncmp (arg_p, "-H", 2)) {
-				version ();
+
+			case 'h':
+			case 'H':
 				usage ();
-			} else if (!strncmp (arg_p, "-h", 2)) {
-				version ();
-				usage ();
-			}
-			else {
-				version ();
-				usage ();
-			}
-		}
-		else {
-			version ();
-			usage ();
+				exit (0);
+
+			case 'u':
+				state_G.update_interval = atoi (optarg);
+				if (state_G.update_interval < 1)
+					state_G.update_interval = CHK_INTERVAL;
+				break;
+
+			case 0:
+				state_G.mb = 1;
+				break;
+
+			case 1:
+				state_G.show_used = 1;
+				break;
+
+			case 2:
+				safe_copy (displayName_G, optarg, sizeof (displayName_G));
+				break;
+
+			case 3:
+				safe_copy (mainGeometry_G, optarg, sizeof (mainGeometry_G));
+				break;
+
+			case 4:
+				withdrawn_G = 1;
+				break;
+
+			case 5:
+				iconic_G = 1;
+				break;
+
+			case 6:
+				pushedIn_G = 0;
+				break;
+
+			case 7:
+				state_G.standard_free = 1;
+				break;
+
+			case 8:
+				safe_copy (state_G.proc_mem_filename, optarg, sizeof (state_G.proc_mem_filename));
+				break;
+
+			case 9:
+				safe_copy (state_G.bgcolor, optarg, sizeof (state_G.bgcolor));
+				break;
+
+			case 10:
+				safe_copy (state_G.fgcolor, optarg, sizeof (state_G.fgcolor));
+				break;
+
+			case 11:
+				safe_copy (state_G.memory_color, optarg, sizeof (state_G.memory_color));
+				break;
+
+			case 12:
+				safe_copy (state_G.buffer_color, optarg, sizeof (state_G.buffer_color));
+				break;
+
+			case 13:
+				safe_copy (state_G.cache_color, optarg, sizeof (state_G.cache_color));
+				break;
+
+			case 14:
+				safe_copy (state_G.swap_color, optarg, sizeof (state_G.swap_color));
+				break;
 		}
 	}
 }
