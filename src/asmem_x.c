@@ -67,7 +67,7 @@ draw_window (Window win)
 	int points[3];
 	unsigned int total;
 	unsigned int percentage;
-	unsigned long int free_mem;
+	unsigned long int freeMem;
 	unsigned int available;
 	int i;
 	unsigned int tmp[6];
@@ -89,16 +89,16 @@ draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
-	if (state_G.standard_free)
-		free_mem = state_G.fresh.free;
+	if (state_G.standardFree)
+		freeMem = state_G.fresh.free;
 	else
-		free_mem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
-	if (state_G.show_used)
-		free_mem = state_G.fresh.total - free_mem;
+		freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
+	if (state_G.showUsed)
+		freeMem = state_G.fresh.total - freeMem;
 	if ((state_G.fresh.total > (999999 * 1024)) || state_G.mb)
-		available = free_mem / 1024 / 1024;
+		available = freeMem / 1024 / 1024;
 	else
-		available = free_mem / 1024;
+		available = freeMem / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;
@@ -111,7 +111,7 @@ draw_window (Window win)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
 
 	if (state_G.fresh.total)
-		percentage = (int)(((float)free_mem) / ((float)state_G.fresh.total) * 100);
+		percentage = (int)(((float)freeMem) / ((float)state_G.fresh.total) * 100);
 	else
 		percentage = 0;
 	if (percentage >= 100)
@@ -146,10 +146,10 @@ draw_window (Window win)
 		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
-	if ((state_G.fresh.swap_total > (999999*1024)) || state_G.mb)
-		total = state_G.fresh.swap_total / 1024 / 1024;
+	if ((state_G.fresh.swapTotal > (999999*1024)) || state_G.mb)
+		total = state_G.fresh.swapTotal / 1024 / 1024;
 	else
-		total = state_G.fresh.swap_total / 1024;
+		total = state_G.fresh.swapTotal / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -161,13 +161,13 @@ draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
 
-	free_mem = state_G.fresh.swap_free;
-	if (state_G.show_used)
-		free_mem = state_G.fresh.swap_total - free_mem;
-	if ((free_mem > (999999 * 1024)) || state_G.mb)
-		available = free_mem / 1024 / 1024;
+	freeMem = state_G.fresh.swapFree;
+	if (state_G.showUsed)
+		freeMem = state_G.fresh.swapTotal - freeMem;
+	if ((freeMem > (999999 * 1024)) || state_G.mb)
+		available = freeMem / 1024 / 1024;
 	else
-		available = free_mem / 1024;
+		available = freeMem / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;
@@ -179,8 +179,8 @@ draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
 
-	if (state_G.fresh.swap_total)
-		percentage = (int) (((float)free_mem) / ((float)state_G.fresh.swap_total) * 100);
+	if (state_G.fresh.swapTotal)
+		percentage = (int) (((float)freeMem) / ((float)state_G.fresh.swapTotal) * 100);
 	else
 		percentage = 0;
 	if (percentage >= 100)
@@ -196,7 +196,7 @@ draw_window (Window win)
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
 
-	points[0] = ((float)state_G.fresh.swap_used) / ((float)state_G.fresh.swap_total) * 46;
+	points[0] = ((float)state_G.fresh.swapUsed) / ((float)state_G.fresh.swapTotal) * 46;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[3][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
@@ -262,7 +262,7 @@ asmem_update (void)
 	time_t currentTime;
 
 	currentTime = time (0);
-	if (abs (currentTime - lastTime_G) >= state_G.update_interval) {
+	if (abs (currentTime - lastTime_G) >= state_G.updateInterval) {
 		lastTime_G = currentTime;
 		if (read_meminfo ())
 			asmem_cleanup ();
@@ -306,23 +306,23 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	}
 	screen = DefaultScreen (dpy_pG);
 	rootWin_G = RootWindow (dpy_pG, screen);
-	bgPix_G = get_colour (state_G.bgcolor, dpy_pG, rootWin_G);
-	fgPix_G = get_colour (state_G.fgcolor, dpy_pG, rootWin_G);
+	bgPix_G = get_colour (state_G.bgColor, dpy_pG, rootWin_G);
+	fgPix_G = get_colour (state_G.fgColor, dpy_pG, rootWin_G);
 	color_depth = DefaultDepth (dpy_pG, screen);
 #ifdef DEBUG
 	printf ("asmem : detected color depth %d bpp, using %d bpp\n", color_depth, color_depth);
 #endif
 	/* adjust the background pixmap */
-	sprintf (pgPixColour_G[3], "# c %s", state_G.fgcolor);
+	sprintf (pgPixColour_G[3], "# c %s", state_G.fgColor);
 	if (pushedIn) {
-		sprintf (pgPixColour_G[0], ". c %s", darken_char_colour (state_G.bgcolor, 1.6, dpy_pG, rootWin_G));
-		sprintf (pgPixColour_G[1], "c c %s", state_G.bgcolor);
-		sprintf (pgPixColour_G[2], "q c %s", lighten_char_colour (state_G.bgcolor, 2.8, dpy_pG, rootWin_G));
+		sprintf (pgPixColour_G[0], ". c %s", darken_char_colour (state_G.bgColor, 1.6, dpy_pG, rootWin_G));
+		sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
+		sprintf (pgPixColour_G[2], "q c %s", lighten_char_colour (state_G.bgColor, 2.8, dpy_pG, rootWin_G));
 	}
 	else {
-		sprintf (pgPixColour_G[2], "q c %s", darken_char_colour (state_G.bgcolor, 1.2, dpy_pG, rootWin_G));
-		sprintf (pgPixColour_G[1], "c c %s", state_G.bgcolor);
-		sprintf (pgPixColour_G[0], ". c %s", lighten_char_colour (state_G.bgcolor, 2.5, dpy_pG, rootWin_G));
+		sprintf (pgPixColour_G[2], "q c %s", darken_char_colour (state_G.bgColor, 1.2, dpy_pG, rootWin_G));
+		sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
+		sprintf (pgPixColour_G[0], ". c %s", lighten_char_colour (state_G.bgColor, 2.5, dpy_pG, rootWin_G));
 	}
 	for (tmp=0; tmp<4; ++tmp)
 		background[tmp+1] = pgPixColour_G[tmp];
@@ -336,10 +336,10 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 #ifdef DEBUG
 	printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
 #endif
-	sprintf (alphaColour_G[0], ". c %s", state_G.bgcolor);
-	sprintf (alphaColour_G[1], "# c %s", state_G.fgcolor);
-	sprintf (alphaColour_G[2], "a c %s", darken_char_colour (state_G.bgcolor, 1.4, dpy_pG, rootWin_G));
-	sprintf (alphaColour_G[3], "c c %s", darken_char_colour (state_G.fgcolor, 1.6, dpy_pG, rootWin_G));
+	sprintf (alphaColour_G[0], ". c %s", state_G.bgColor);
+	sprintf (alphaColour_G[1], "# c %s", state_G.fgColor);
+	sprintf (alphaColour_G[2], "a c %s", darken_char_colour (state_G.bgColor, 1.4, dpy_pG, rootWin_G));
+	sprintf (alphaColour_G[3], "c c %s", darken_char_colour (state_G.fgColor, 1.6, dpy_pG, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		alphabet[tmp+1] = alphaColour_G[tmp];
 	alphabetXpm_G.attributes.valuemask |= (XpmReturnPixels | XpmReturnExtensions);
@@ -440,18 +440,18 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	status = XMapWindow (dpy_pG, mainWin_G);
 
 	/* Get colors while waiting for Expose */
-	pix_G[0][0] = lighten_colour (state_G.memory_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[0][1] = get_colour (state_G.memory_color, dpy_pG, mainWin_G);
-	pix_G[0][2] = darken_colour (state_G.memory_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][0] = lighten_colour (state_G.buffer_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][1] = get_colour (state_G.buffer_color, dpy_pG, mainWin_G);
-	pix_G[1][2] = darken_colour (state_G.buffer_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][0] = lighten_colour (state_G.cache_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][1] = get_colour (state_G.cache_color, dpy_pG, mainWin_G);
-	pix_G[2][2] = darken_colour (state_G.cache_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][0] = lighten_colour (state_G.swap_color, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][1] = get_colour (state_G.swap_color, dpy_pG, mainWin_G);
-	pix_G[3][2] = darken_colour (state_G.swap_color, 1.4, dpy_pG, mainWin_G);
+	pix_G[0][0] = lighten_colour (state_G.memoryColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[0][1] = get_colour (state_G.memoryColor, dpy_pG, mainWin_G);
+	pix_G[0][2] = darken_colour (state_G.memoryColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[1][0] = lighten_colour (state_G.bufferColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[1][1] = get_colour (state_G.bufferColor, dpy_pG, mainWin_G);
+	pix_G[1][2] = darken_colour (state_G.bufferColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[2][0] = lighten_colour (state_G.cacheColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[2][1] = get_colour (state_G.cacheColor, dpy_pG, mainWin_G);
+	pix_G[2][2] = darken_colour (state_G.cacheColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[3][0] = lighten_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[3][1] = get_colour (state_G.swapColor, dpy_pG, mainWin_G);
+	pix_G[3][2] = darken_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
 
 	if (open_meminfo ())
 		asmem_cleanup ();

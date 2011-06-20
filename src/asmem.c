@@ -35,22 +35,22 @@ static char mainGeometry_G[50];
 static void
 defaults (void)
 {
-	state_G.update_interval = CHK_INTERVAL;
-	state_G.standard_free = 0;
+	state_G.updateInterval = CHK_INTERVAL;
+	state_G.standardFree = 0;
 	state_G.mb = 0;
-	state_G.show_used = 0;
-	safe_copy (state_G.proc_mem_filename, PROC_MEM, 256);
+	state_G.showUsed = 0;
+	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
 	withdrawn_G = 0;
 	iconic_G = 0;
 	pushedIn_G = 1;
 	safe_copy (displayName_G, "", 50);
 	safe_copy (mainGeometry_G, "", 50);
-	safe_copy (state_G.bgcolor, "#303030", 50);
-	safe_copy (state_G.fgcolor, "#20b2aa", 50);
-	safe_copy (state_G.memory_color, "#4141d7", 50);
-	safe_copy (state_G.buffer_color, "#aa80aa", 50);
-	safe_copy (state_G.cache_color, "#bebebe", 50);
-	safe_copy (state_G.swap_color, "#ffa649", 50);
+	safe_copy (state_G.bgColor, "#303030", 50);
+	safe_copy (state_G.fgColor, "#20b2aa", 50);
+	safe_copy (state_G.memoryColor, "#4141d7", 50);
+	safe_copy (state_G.bufferColor, "#aa80aa", 50);
+	safe_copy (state_G.cacheColor, "#bebebe", 50);
+	safe_copy (state_G.swapColor, "#ffa649", 50);
 }
 
 /* print the usage for the tool */
@@ -129,9 +129,9 @@ parse_cmdline (int argc, char *argv[])
 				exit (0);
 
 			case 'u':
-				state_G.update_interval = atoi (optarg);
-				if (state_G.update_interval < 1)
-					state_G.update_interval = CHK_INTERVAL;
+				state_G.updateInterval = atoi (optarg);
+				if (state_G.updateInterval < 1)
+					state_G.updateInterval = CHK_INTERVAL;
 				break;
 
 			case 0:
@@ -139,7 +139,7 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 1:
-				state_G.show_used = 1;
+				state_G.showUsed = 1;
 				break;
 
 			case 2:
@@ -163,35 +163,35 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 7:
-				state_G.standard_free = 1;
+				state_G.standardFree = 1;
 				break;
 
 			case 8:
-				safe_copy (state_G.proc_mem_filename, optarg, sizeof (state_G.proc_mem_filename));
+				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
 				break;
 
 			case 9:
-				safe_copy (state_G.bgcolor, optarg, sizeof (state_G.bgcolor));
+				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
 				break;
 
 			case 10:
-				safe_copy (state_G.fgcolor, optarg, sizeof (state_G.fgcolor));
+				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
 				break;
 
 			case 11:
-				safe_copy (state_G.memory_color, optarg, sizeof (state_G.memory_color));
+				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
 				break;
 
 			case 12:
-				safe_copy (state_G.buffer_color, optarg, sizeof (state_G.buffer_color));
+				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
 				break;
 
 			case 13:
-				safe_copy (state_G.cache_color, optarg, sizeof (state_G.cache_color));
+				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
 				break;
 
 			case 14:
-				safe_copy (state_G.swap_color, optarg, sizeof (state_G.swap_color));
+				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
 				break;
 		}
 	}
