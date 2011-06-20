@@ -12,8 +12,6 @@
 
 #include "state.h"
 
-#include "config.h"
-
 extern AsmemState_t state_G;
 
 #define BUFFER_LENGTH 400

@@ -12,6 +12,7 @@
 
 #include "asmem_x.h"
 #include "state.h"
+#include "config.h"
 
 extern AsmemState_t state_G;
 
@@ -81,7 +82,7 @@ usage (void)
 static void
 version (void)
 {
-	printf ("asmem: memory utilization monitor version 1.10\n");
+	printf ("%s\n", PACKAGE_STRING);
 }
 
 static void
