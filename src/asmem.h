@@ -4,8 +4,8 @@
  * This software is distributed under GPL. For details see LICENSE file.
  */
 
-#ifndef state__H
-#define state__H
+#ifndef asmem__H
+#define asmem__H
 
 /* file to read for stat info */
 #define PROC_MEM "/proc/meminfo"
@@ -38,5 +38,11 @@ typedef struct {
 	AsmemMeminfo_t last;		/* the old data */
 	AsmemMeminfo_t fresh;		/* the new data */
 } AsmemState_t;
+
+typedef struct {
+	Pixmap pixmap;
+	Pixmap mask;
+	XpmAttributes attributes;
+} XpmIcon_t;
 
 #endif
