@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +45,7 @@ static void parse_cmdline (int argc, char *argv[]);
 static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
 static void asmem_cleanup (void);
 static void error_handle (int place, const char *message_p);
+static void verbose_debug (void);
 static int get_num (FILE *file_p, char *marker_p);
 static int read_meminfo (void);
 static int open_meminfo (void);
@@ -71,6 +73,7 @@ static char displayName_G[50];
 static char mainGeometry_G[50];
 static FILE *file_pG;
 static char tmpChar_G[50];
+static bool verbose_G = false;
 
 /* X windows related global variables */
 static Display *dpy_pG = 0; /* The display we are working on */
@@ -142,6 +145,7 @@ usage (void)
 	printf ("usage: asmem [options ...]\n\n");
 	printf ("-V | --version             print version and exit\n");
 	printf ("-h | -H | --help           print this message and exit\n");
+	printf ("-v | --verbose             print debugging information\n");
 	printf ("-u | --update <secs>       the update interval in seconds\n");
 	printf ("--mb                       the display is in MBytes\n");
 	printf ("--used                     display used memory instead of free\n");
@@ -173,6 +177,7 @@ parse_cmdline (int argc, char *argv[])
 	struct option longOpts[] = {
 		{"version", no_argument, NULL, 'V'},
 		{"help", no_argument, NULL, 'h'},
+		{"verbose", no_argument, NULL, 'v'},
 		{"update", required_argument, NULL, 'u'},
 		{"mb", no_argument, NULL, 0},
 		{"used", no_argument, NULL, 1},
@@ -195,7 +200,7 @@ parse_cmdline (int argc, char *argv[])
 	while (1) {
 		int c;
 
-		c = getopt_long (argc, argv, "VhHu:", longOpts, NULL);
+		c = getopt_long (argc, argv, "VhHu:v", longOpts, NULL);
 		if (c == -1)
 			break;
 
@@ -208,6 +213,10 @@ parse_cmdline (int argc, char *argv[])
 			case 'H':
 				usage ();
 				exit (0);
+
+			case 'v':
+				verbose_G = true;
+				break;
 
 			case 'u':
 				state_G.updateInterval = atoi (optarg);
@@ -333,15 +342,13 @@ error_handle (int place, const char *message_p)
 	}
 }
 
-#ifdef DEBUG
-#define verb_debug () { \
-	printf ("+- Total : %ld, used : %ld, free : %ld \n", state_G.fresh.total, state_G.fresh.used, state_G.fresh.free); \
-	printf ("|  Shared : %ld, buffers : %ld, cached : %ld \n", state_G.fresh.shared, state_G.fresh.buffers, state_G.fresh.cached); \
-	printf ("+- Swap total : %ld, used : %ld, free : %ld \n", state_G.fresh.swapTotal, state_G.fresh.swapUsed, state_G.fresh.swapFree); \
+static void
+verbose_debug (void)
+{
+	printf ("+- Total : %ld, used : %ld, free : %ld \n", state_G.fresh.total, state_G.fresh.used, state_G.fresh.free);
+	printf ("|  Shared : %ld, buffers : %ld, cached : %ld \n", state_G.fresh.shared, state_G.fresh.buffers, state_G.fresh.cached);
+	printf ("+- Swap total : %ld, used : %ld, free : %ld \n", state_G.fresh.swapTotal, state_G.fresh.swapUsed, state_G.fresh.swapFree);
 }
-#else
-#define verb_debug ()
-#endif /* DEBUG */
 
 static int
 get_num (FILE *file_p, char *marker_p)
@@ -459,20 +466,19 @@ static char*
 darken_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
 {
 	XColor tmpColour;
-#ifdef DEBUG
-	printf ("darkening %s ->", colourName_p);
-#endif
+
+	if (verbose_G)
+		printf ("darkening %s ->", colourName_p);
 	tmpColour = parse_colour (colourName_p, dpy_p, win);
-#ifdef DEBUG
-	printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
-#endif
+	if (verbose_G)
+		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 / rate;
 	tmpColour.green = tmpColour.green / 257 / rate;
 	tmpColour.blue = tmpColour.blue / 257 / rate;
 	sprintf (tmpChar_G, "#%.2x%.2x%.2x", (int)tmpColour.red, (int)tmpColour.green, (int)tmpColour.blue);
-#ifdef DEBUG
-	printf ("-> %s\n", tmpChar_G);
-#endif
+	if (verbose_G)
+		printf ("-> %s\n", tmpChar_G);
+
 	return tmpChar_G;
 }
 
@@ -488,13 +494,12 @@ static char*
 lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
 {
 	XColor tmpColour;
-#ifdef DEBUG
-	printf ("lightening %s ->", colourName_p);
-#endif
+
+	if (verbose_G)
+		printf ("lightening %s ->", colourName_p);
 	tmpColour = parse_colour (colourName_p, dpy_p, win);
-#ifdef DEBUG
-	printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
-#endif
+	if (verbose_G)
+		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 * rate;
 	tmpColour.green = tmpColour.green / 257 * rate;
 	tmpColour.blue = tmpColour.blue / 257 * rate;
@@ -505,9 +510,9 @@ lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
 	if (tmpColour.blue > 255)
 		tmpColour.blue = 255;
 	sprintf (tmpChar_G, "#%.2x%.2x%.2x", (int)tmpColour.red, (int)tmpColour.green, (int)tmpColour.blue);
-#ifdef DEBUG
-	printf ("-> %s\n", tmpChar_G);
-#endif
+	if (verbose_G)
+		printf ("-> %s\n", tmpChar_G);
+
 	return tmpChar_G;
 }
 
@@ -683,9 +688,8 @@ check_x11_events (void)
 				break;
 			case ClientMessage:
 				if ((event.xclient.message_type == wmProtocols_G) && (event.xclient.data.l[0] == wmDelWin_G)) {
-#ifdef DEBUG
-					printf ("caught wmDelWin_G, closing\n");
-#endif
+					if (verbose_G)
+						printf ("caught wmDelWin_G, closing\n");
 					asmem_cleanup ();
 				}
 				break;
@@ -755,9 +759,9 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	bgPix_G = get_colour (state_G.bgColor, dpy_pG, rootWin_G);
 	fgPix_G = get_colour (state_G.fgColor, dpy_pG, rootWin_G);
 	color_depth = DefaultDepth (dpy_pG, screen);
-#ifdef DEBUG
-	printf ("asmem : detected color depth %d bpp, using %d bpp\n", color_depth, color_depth);
-#endif
+	if (verbose_G)
+		printf ("asmem : detected color depth %d bpp, using %d bpp\n", color_depth, color_depth);
+
 	/* adjust the background pixmap */
 	sprintf (pgPixColour_G[3], "# c %s", state_G.fgColor);
 	if (pushedIn) {
@@ -779,9 +783,9 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 		printf ("asmem : (%d) not enough free color cells for background.\n", status);
 		asmem_cleanup ();
 	}
-#ifdef DEBUG
-	printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
-#endif
+	if (verbose_G)
+		printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
+
 	sprintf (alphaColour_G[0], ". c %s", state_G.bgColor);
 	sprintf (alphaColour_G[1], "# c %s", state_G.fgColor);
 	sprintf (alphaColour_G[2], "a c %s", darken_char_colour (state_G.bgColor, 1.4, dpy_pG, rootWin_G));
