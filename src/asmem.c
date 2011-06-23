@@ -354,8 +354,8 @@ get_num (FILE *file_p, char *marker_p)
 		if (fgets (thebuf, sizeof (thebuf), file_p) == NULL) {
 			printf ("file error\n");
 			return (-1);
-
-		} else
+		}
+		else
 			if (strstr (thebuf, marker_p)) {
 				sscanf (thebuf, "%*s %d %*s\n", &theval);
 				return (theval);
