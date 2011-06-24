@@ -307,7 +307,6 @@ cleanup (void)
 	if (dpy_pG)
 		XCloseDisplay (dpy_pG);
 	close_meminfo ();
-	exit (0);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -650,6 +649,7 @@ x11_check_events (void)
 					if (verbose_G)
 						printf ("caught wmDelWin_G, closing\n");
 					cleanup ();
+					exit (0);
 				}
 				break;
 		}
@@ -673,8 +673,10 @@ x11_update (void)
 	currentTime = time (0);
 	if (abs (currentTime - lastTime_G) >= state_G.updateInterval) {
 		lastTime_G = currentTime;
-		if (!read_meminfo ())
+		if (!read_meminfo ()) {
 			cleanup ();
+			exit (1);
+		}
 		if (memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t))) {
 			memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
 			x11_draw_window (drawWin_G);
@@ -740,6 +742,7 @@ x11_initialize (int argc, char *argv[])
 	if (status != XpmSuccess) {
 		printf ("asmem : (%d) not enough free color cells for background.\n", status);
 		cleanup ();
+		exit (1);
 	}
 	if (verbose_G)
 		printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
@@ -861,10 +864,14 @@ x11_initialize (int argc, char *argv[])
 	pix_G[3][1] = x11_get_colour (state_G.swapColor, dpy_pG, mainWin_G);
 	pix_G[3][2] = x11_darken_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
 
-	if (!open_meminfo ())
+	if (!open_meminfo ()) {
 		cleanup ();
-	if (!read_meminfo ())
+		exit (1);
+	}
+	if (!read_meminfo ()) {
 		cleanup ();
+		exit (1);
+	}
 
 	/* wait for the Expose event now */
 	XNextEvent (dpy_pG, &Event);
