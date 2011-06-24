@@ -47,7 +47,6 @@ static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
 static void cleanup (void);
 
 // file handling
-static void verbose_debug (void);
 static int get_num (char *marker_p);
 static int read_meminfo (void);
 static int open_meminfo (void);
@@ -314,14 +313,6 @@ cleanup (void)
 /* ------------------------------------------------------------------------- */
 // file routines
 /* ------------------------------------------------------------------------- */
-static void
-verbose_debug (void)
-{
-	printf ("+- Total : %ld, used : %ld, free : %ld \n", state_G.fresh.total, state_G.fresh.used, state_G.fresh.free);
-	printf ("|  Shared : %ld, buffers : %ld, cached : %ld \n", state_G.fresh.shared, state_G.fresh.buffers, state_G.fresh.cached);
-	printf ("+- Swap total : %ld, used : %ld, free : %ld \n", state_G.fresh.swapTotal, state_G.fresh.swapUsed, state_G.fresh.swapFree);
-}
-
 static int
 get_num (char *marker_p)
 {
