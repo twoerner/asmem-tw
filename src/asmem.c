@@ -48,9 +48,9 @@ static void cleanup (void);
 
 // file handling
 static int get_num (char *marker_p);
-static int read_meminfo (void);
-static int open_meminfo (void);
-static int close_meminfo (void);
+static bool read_meminfo (void);
+static bool open_meminfo (void);
+static void close_meminfo (void);
 
 // x11
 static Pixel x11_get_colour (char *colourName_p, Display *dpy_p, Window win);
@@ -68,9 +68,9 @@ static void x11_initialize (int argc, char *argv[]);
 // globals
 /* ------------------------------------------------------------------------- */
 static AsmemState_t state_G;
-static int withdrawn_G = 0;
-static int iconic_G = 0;
-static int pushedIn_G = 1;
+static bool withdrawn_G = false;
+static bool iconic_G = false;
+static bool pushedIn_G = true;
 static char displayName_G[50];
 static char mainGeometry_G[50];
 static FILE *procMeminfoFile_pG = NULL;
@@ -124,13 +124,13 @@ static void
 defaults (void)
 {
 	state_G.updateInterval = CHK_INTERVAL;
-	state_G.standardFree = 0;
-	state_G.mb = 0;
-	state_G.showUsed = 0;
+	state_G.standardFree = false;
+	state_G.mb = false;
+	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
-	withdrawn_G = 0;
-	iconic_G = 0;
-	pushedIn_G = 1;
+	withdrawn_G = false;
+	iconic_G = false;
+	pushedIn_G = true;
 	safe_copy (displayName_G, "", 50);
 	safe_copy (mainGeometry_G, "", 50);
 	safe_copy (state_G.bgColor, "#303030", 50);
@@ -227,11 +227,11 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 0:
-				state_G.mb = 1;
+				state_G.mb = true;
 				break;
 
 			case 1:
-				state_G.showUsed = 1;
+				state_G.showUsed = true;
 				break;
 
 			case 2:
@@ -243,19 +243,19 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 4:
-				withdrawn_G = 1;
+				withdrawn_G = true;
 				break;
 
 			case 5:
-				iconic_G = 1;
+				iconic_G = true;
 				break;
 
 			case 6:
-				pushedIn_G = 0;
+				pushedIn_G = false;
 				break;
 
 			case 7:
-				state_G.standardFree = 1;
+				state_G.standardFree = true;
 				break;
 
 			case 8:
@@ -333,7 +333,7 @@ get_num (char *marker_p)
 	} while (!done);
 }
 
-static int
+static bool
 read_meminfo (void)
 {
 	int result;
@@ -343,7 +343,7 @@ read_meminfo (void)
 	result = fseek (procMeminfoFile_pG, 0L, SEEK_SET);
 	if (result < 0) {
 		perror ("fseek()");
-		return -1;
+		return false;
 	}
 
 	state_G.fresh.total = get_num ("MemTotal") * 1024;
@@ -356,25 +356,24 @@ read_meminfo (void)
 	state_G.fresh.swapUsed = state_G.fresh.swapTotal - state_G.fresh.swapFree;
 	state_G.fresh.used = state_G.fresh.total - state_G.fresh.free;
 
-	return 0;
+	return true;
 }
 
-static int
+static bool
 open_meminfo (void)
 {
 	int result;
 	if ((procMeminfoFile_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
 		perror ("fopen()");
-		return -1;
+		return false;
 	}
-	return 0;
+	return true;
 }
 
-static int
+static void
 close_meminfo (void)
 {
 	fclose (procMeminfoFile_pG);
-	return 0;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -674,7 +673,7 @@ x11_update (void)
 	currentTime = time (0);
 	if (abs (currentTime - lastTime_G) >= state_G.updateInterval) {
 		lastTime_G = currentTime;
-		if (read_meminfo ())
+		if (!read_meminfo ())
 			cleanup ();
 		if (memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t))) {
 			memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
@@ -862,9 +861,9 @@ x11_initialize (int argc, char *argv[])
 	pix_G[3][1] = x11_get_colour (state_G.swapColor, dpy_pG, mainWin_G);
 	pix_G[3][2] = x11_darken_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
 
-	if (open_meminfo ())
+	if (!open_meminfo ())
 		cleanup ();
-	if (read_meminfo ())
+	if (!read_meminfo ())
 		cleanup ();
 
 	/* wait for the Expose event now */

@@ -7,6 +7,8 @@
 #ifndef asmem__H
 #define asmem__H
 
+#include <stdbool.h>
+
 /* file to read for stat info */
 #define PROC_MEM "/proc/meminfo"
 
@@ -25,9 +27,9 @@ typedef struct {
 
 typedef struct {
 	long int updateInterval;	/* interval (sec) to check the statistics */
-	unsigned char standardFree;	/* use free memory as is */
-	unsigned char mb; 		/* display in MBytes */
-	unsigned char showUsed; 	/* show used instead of free */
+	bool standardFree;		/* use free memory as is */
+	bool mb;	 		/* display in MBytes */
+	bool showUsed;		 	/* show used instead of free */
 	char procMemFilename[256];	/* the file to read for the memory info */
 	char bgColor[50];
 	char fgColor[50];
