@@ -49,7 +49,7 @@ static void cleanup (void);
 // file handling
 static void error_handle (int place, const char *message_p);
 static void verbose_debug (void);
-static int get_num (FILE *file_p, char *marker_p);
+static int get_num (char *marker_p);
 static int read_meminfo (void);
 static int open_meminfo (void);
 static int close_meminfo (void);
@@ -75,7 +75,7 @@ static int iconic_G = 0;
 static int pushedIn_G = 1;
 static char displayName_G[50];
 static char mainGeometry_G[50];
-static FILE *file_pG;
+static FILE *procMeminfoFile_pG = NULL;
 static char tmpChar_G[50];
 static bool verbose_G = false;
 
@@ -355,14 +355,14 @@ verbose_debug (void)
 }
 
 static int
-get_num (FILE *file_p, char *marker_p)
+get_num (char *marker_p)
 {
 	char thebuf[255];
 	int done = 0;
 	int theval;
 
 	do {
-		if (fgets (thebuf, sizeof (thebuf), file_p) == NULL) {
+		if (fgets (thebuf, sizeof (thebuf), procMeminfoFile_pG) == NULL) {
 			printf ("file error\n");
 			return (-1);
 		}
@@ -379,21 +379,21 @@ read_meminfo (void)
 {
 	int result;
 
-	fflush (file_pG);
+	fflush (procMeminfoFile_pG);
 
-	result = fseek (file_pG, 0L, SEEK_SET);
+	result = fseek (procMeminfoFile_pG, 0L, SEEK_SET);
 	if (result < 0) {
 		error_handle (2, "seek");
 		return -1;
 	}
 
-	state_G.fresh.total = get_num (file_pG, "MemTotal") * 1024;
-	state_G.fresh.free = get_num (file_pG, "MemFree") * 1024;
+	state_G.fresh.total = get_num ("MemTotal") * 1024;
+	state_G.fresh.free = get_num ("MemFree") * 1024;
 	state_G.fresh.shared = 0;   /* this is always 0 */
-	state_G.fresh.buffers = get_num (file_pG, "Buffers") * 1024;
-	state_G.fresh.cached = get_num (file_pG, "Cached") * 1024;
-	state_G.fresh.swapTotal = get_num (file_pG, "SwapTotal") * 1024;
-	state_G.fresh.swapFree = get_num (file_pG, "SwapFree") * 1024;
+	state_G.fresh.buffers = get_num ("Buffers") * 1024;
+	state_G.fresh.cached = get_num ("Cached") * 1024;
+	state_G.fresh.swapTotal = get_num ("SwapTotal") * 1024;
+	state_G.fresh.swapFree = get_num ("SwapFree") * 1024;
 	state_G.fresh.swapUsed = state_G.fresh.swapTotal - state_G.fresh.swapFree;
 	state_G.fresh.used = state_G.fresh.total - state_G.fresh.free;
 
@@ -404,7 +404,7 @@ static int
 open_meminfo (void)
 {
 	int result;
-	if ((file_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
+	if ((procMeminfoFile_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
 		error_handle (1, "");
 		return -1;
 	}
@@ -414,7 +414,7 @@ open_meminfo (void)
 static int
 close_meminfo (void)
 {
-	fclose (file_pG);
+	fclose (procMeminfoFile_pG);
 	return 0;
 }
 
