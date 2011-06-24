@@ -60,7 +60,7 @@ static Pixel lighten_colour (char *colourName_p, float rate, Display *dpy_p, Win
 static void draw_window (Window win);
 static void check_x11_events (void);
 static void asmem_update (void);
-static void asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometry_p, int withdrawn, int iconic, int pushedIn);
+static void asmem_initialize (int argc, char *argv[]);
 
 /* ------------------------------------------------------------------------- */
 // globals
@@ -106,7 +106,7 @@ main (int argc, char *argv[])
 {
 	defaults ();
 	parse_cmdline (argc, argv);
-	asmem_initialize (argc, argv, displayName_G, mainGeometry_G, withdrawn_G, iconic_G, pushedIn_G);
+	asmem_initialize (argc, argv);
 	while (1) {
 		asmem_update ();
 		usleep (X11_INTERVAL);
@@ -729,8 +729,7 @@ asmem_update (void)
 }
 
 static void
-asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometry_p,
-		int withdrawn, int iconic, int pushedIn)
+asmem_initialize (int argc, char *argv[])
 {
 	int screen;
 	Status status;
@@ -748,10 +747,10 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	int x_negative = 0;
 	int y_negative = 0;
 
-	dpy_pG = XOpenDisplay (displayName_p);
+	dpy_pG = XOpenDisplay (displayName_G);
 	if (!dpy_pG) {
 		printf ("asmem : grrrr... can't open display %s. Sorry ...\n",
-			XDisplayName (displayName_p));
+			XDisplayName (displayName_G));
 		exit (1);
 	}
 	screen = DefaultScreen (dpy_pG);
@@ -764,7 +763,7 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 
 	/* adjust the background pixmap */
 	sprintf (pgPixColour_G[3], "# c %s", state_G.fgColor);
-	if (pushedIn) {
+	if (pushedIn_G) {
 		sprintf (pgPixColour_G[0], ". c %s", darken_char_colour (state_G.bgColor, 1.6, dpy_pG, rootWin_G));
 		sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
 		sprintf (pgPixColour_G[2], "q c %s", lighten_char_colour (state_G.bgColor, 2.8, dpy_pG, rootWin_G));
@@ -800,9 +799,9 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 		exit (1);
 	}
 
-	if (strlen (mainGeometry_p)) {
+	if (strlen (mainGeometry_G)) {
 		/* Check the user-specified size */
-		result = XParseGeometry (mainGeometry_p, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height);
+		result = XParseGeometry (mainGeometry_G, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height);
 		if (result & XNegative)
 			x_negative = 1;
 		if (result & YNegative)
@@ -812,7 +811,7 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	SizeHints.flags= USSize|USPosition;
 	SizeHints.x = 0;
 	SizeHints.y = 0;
-	XWMGeometry (dpy_pG, screen, mainGeometry_p, NULL, 1, & SizeHints, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height, &gravity);
+	XWMGeometry (dpy_pG, screen, mainGeometry_G, NULL, 1, & SizeHints, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height, &gravity);
 	SizeHints.min_width = SizeHints.max_width = SizeHints.width = backgroundXpm_G.attributes.width;
 	SizeHints.min_height = SizeHints.max_height = SizeHints.height= backgroundXpm_G.attributes.height;
 	SizeHints.flags |= PMinSize|PMaxSize;
@@ -873,13 +872,13 @@ asmem_initialize (int argc, char *argv[], char *displayName_p, char *mainGeometr
 	status = XSetWMProtocols (dpy_pG, iconWin_G, &wmDelWin_G, 1);
 
 	WmHints.flags = StateHint | IconWindowHint;
-	WmHints.initial_state = withdrawn ? WithdrawnState : iconic ? IconicState : NormalState;
+	WmHints.initial_state = withdrawn_G ? WithdrawnState : iconic_G ? IconicState : NormalState;
 	WmHints.icon_window = iconWin_G;
-	if (withdrawn) {
+	if (withdrawn_G) {
 		WmHints.window_group = mainWin_G;
 		WmHints.flags |= WindowGroupHint;
 	}
-	if (iconic || withdrawn) {
+	if (iconic_G || withdrawn_G) {
 		WmHints.icon_x = SizeHints.x;
 		WmHints.icon_y = SizeHints.y;
 		WmHints.flags |= IconPositionHint;
