@@ -47,7 +47,6 @@ static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
 static void cleanup (void);
 
 // file handling
-static void error_handle (int place, const char *message_p);
 static void verbose_debug (void);
 static int get_num (char *marker_p);
 static int read_meminfo (void);
@@ -316,37 +315,6 @@ cleanup (void)
 // file routines
 /* ------------------------------------------------------------------------- */
 static void
-error_handle (int place, const char *message_p)
-{
-	int errorNum;
-
-	errorNum = errno;
-	/* if that was an interrupt - quit quietly */
-	if (errorNum == EINTR) {
-		printf ("asmem: Interrupted.\n");
-		return;
-	}
-	switch (place) {
-		case 1: /* opening the /proc/meminfo file */
-			switch (errorNum) {
-				case ENOENT :
-					printf ("asmem: The file %s does not exist. Weird system it is.\n", state_G.procMemFilename);
-					break;
-				case EACCES :
-					printf ("asmem: You do not have permissions to read %s\n", state_G.procMemFilename);
-					break;
-				default :
-					printf ("asmem: cannot open %s. Error %d: %s\n", state_G.procMemFilename, errno, strerror (errno));
-					break;
-			}
-			break;
-
-		default: /* catchall for the rest */
-			printf ("asmem: %s: Error %d: %s\n", message_p, errno, strerror (errno));
-	}
-}
-
-static void
 verbose_debug (void)
 {
 	printf ("+- Total : %ld, used : %ld, free : %ld \n", state_G.fresh.total, state_G.fresh.used, state_G.fresh.free);
@@ -383,7 +351,7 @@ read_meminfo (void)
 
 	result = fseek (procMeminfoFile_pG, 0L, SEEK_SET);
 	if (result < 0) {
-		error_handle (2, "seek");
+		perror ("fseek()");
 		return -1;
 	}
 
@@ -405,7 +373,7 @@ open_meminfo (void)
 {
 	int result;
 	if ((procMeminfoFile_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
-		error_handle (1, "");
+		perror ("fopen()");
 		return -1;
 	}
 	return 0;
