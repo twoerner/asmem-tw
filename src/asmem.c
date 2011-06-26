@@ -125,7 +125,6 @@ defaults (void)
 {
 	state_G.updateInterval = CHK_INTERVAL;
 	state_G.standardFree = false;
-	state_G.mb = false;
 	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
 	withdrawn_G = false;
@@ -149,7 +148,6 @@ usage (void)
 	printf ("-h | -H | --help           print this message and exit\n");
 	printf ("-v | --verbose             print debugging information\n");
 	printf ("-u | --update <secs>       the update interval in seconds\n");
-	printf ("--mb                       the display is in MBytes\n");
 	printf ("--used                     display used memory instead of free\n");
 	printf ("--display <name>           the name of the display to use\n");
 	printf ("--position <xy>            position on the screen (geometry)\n");
@@ -181,21 +179,20 @@ parse_cmdline (int argc, char *argv[])
 		{"help", no_argument, NULL, 'h'},
 		{"verbose", no_argument, NULL, 'v'},
 		{"update", required_argument, NULL, 'u'},
-		{"mb", no_argument, NULL, 0},
-		{"used", no_argument, NULL, 1},
-		{"display", required_argument, NULL, 2},
-		{"position", required_argument, NULL, 3},
-		{"withdrawn", no_argument, NULL, 4},
-		{"iconic", no_argument, NULL, 5},
-		{"standout", no_argument, NULL, 6},
-		{"asis", no_argument, NULL, 7},
-		{"dev", required_argument, NULL, 8},
-		{"bg", required_argument, NULL, 9},
-		{"fg", required_argument, NULL, 10},
-		{"memory", required_argument, NULL, 11},
-		{"buffer", required_argument, NULL, 12},
-		{"cache", required_argument, NULL, 13},
-		{"swap", required_argument, NULL, 14},
+		{"used", no_argument, NULL, 0},
+		{"display", required_argument, NULL, 1},
+		{"position", required_argument, NULL, 2},
+		{"withdrawn", no_argument, NULL, 3},
+		{"iconic", no_argument, NULL, 4},
+		{"standout", no_argument, NULL, 5},
+		{"asis", no_argument, NULL, 6},
+		{"dev", required_argument, NULL, 7},
+		{"bg", required_argument, NULL, 8},
+		{"fg", required_argument, NULL, 9},
+		{"memory", required_argument, NULL, 10},
+		{"buffer", required_argument, NULL, 11},
+		{"cache", required_argument, NULL, 12},
+		{"swap", required_argument, NULL, 13},
 		{NULL, 0, NULL, 0},
 	};
 
@@ -227,62 +224,58 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 0:
-				state_G.mb = true;
-				break;
-
-			case 1:
 				state_G.showUsed = true;
 				break;
 
-			case 2:
+			case 1:
 				safe_copy (displayName_G, optarg, sizeof (displayName_G));
 				break;
 
-			case 3:
+			case 2:
 				safe_copy (mainGeometry_G, optarg, sizeof (mainGeometry_G));
 				break;
 
-			case 4:
+			case 3:
 				withdrawn_G = true;
 				break;
 
-			case 5:
+			case 4:
 				iconic_G = true;
 				break;
 
-			case 6:
+			case 5:
 				pushedIn_G = false;
 				break;
 
-			case 7:
+			case 6:
 				state_G.standardFree = true;
 				break;
 
-			case 8:
+			case 7:
 				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
 				break;
 
-			case 9:
+			case 8:
 				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
 				break;
 
-			case 10:
+			case 9:
 				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
 				break;
 
-			case 11:
+			case 10:
 				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
 				break;
 
-			case 12:
+			case 11:
 				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
 				break;
 
-			case 13:
+			case 12:
 				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
 				break;
 
-			case 14:
+			case 13:
 				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
 				break;
 		}
@@ -496,10 +489,7 @@ x11_draw_window (Window win)
 	int digits;
 
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, win, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-	if ((state_G.fresh.total > (999999 * 1024)) || state_G.mb)
-		total = state_G.fresh.total / 1024 / 1024;
-	else
-		total = state_G.fresh.total / 1024;
+	total = state_G.fresh.total / 1024 / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -517,10 +507,7 @@ x11_draw_window (Window win)
 		freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
 	if (state_G.showUsed)
 		freeMem = state_G.fresh.total - freeMem;
-	if ((state_G.fresh.total > (999999 * 1024)) || state_G.mb)
-		available = freeMem / 1024 / 1024;
-	else
-		available = freeMem / 1024;
+	available = freeMem / 1024 / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;
@@ -568,10 +555,7 @@ x11_draw_window (Window win)
 		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
-	if ((state_G.fresh.swapTotal > (999999*1024)) || state_G.mb)
-		total = state_G.fresh.swapTotal / 1024 / 1024;
-	else
-		total = state_G.fresh.swapTotal / 1024;
+	total = state_G.fresh.swapTotal / 1024 / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -586,10 +570,7 @@ x11_draw_window (Window win)
 	freeMem = state_G.fresh.swapFree;
 	if (state_G.showUsed)
 		freeMem = state_G.fresh.swapTotal - freeMem;
-	if ((freeMem > (999999 * 1024)) || state_G.mb)
-		available = freeMem / 1024 / 1024;
-	else
-		available = freeMem / 1024;
+	available = freeMem / 1024 / 1024;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;
