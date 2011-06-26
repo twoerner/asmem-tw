@@ -347,7 +347,6 @@ read_meminfo (void)
 
 	state_G.fresh.total = get_num ("MemTotal") * 1024;
 	state_G.fresh.free = get_num ("MemFree") * 1024;
-	state_G.fresh.shared = 0;   /* this is always 0 */
 	state_G.fresh.buffers = get_num ("Buffers") * 1024;
 	state_G.fresh.cached = get_num ("Cached") * 1024;
 	state_G.fresh.swapTotal = get_num ("SwapTotal") * 1024;

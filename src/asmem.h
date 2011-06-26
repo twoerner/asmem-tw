@@ -17,7 +17,6 @@ typedef struct {
 	unsigned long total;		/* total memory available */
 	unsigned long used;		/* the total of used memory */
 	unsigned long free;		/* free memory */
-	unsigned long shared;		/* shared memory */
 	unsigned long buffers;		/* buffers memory */
 	unsigned long cached;		/* cached memory */
 	unsigned long swapTotal;	/* total swap space */
