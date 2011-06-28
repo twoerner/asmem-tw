@@ -830,5 +830,6 @@ x11_initialize (int argc, char *argv[])
 	XNextEvent (dpy_pG, &Event);
 	/* We 've got Expose -> draw the parts of the window. */
 	asmem_redraw ();
+	x11_update ();
 	XFlush (dpy_pG);
 }
