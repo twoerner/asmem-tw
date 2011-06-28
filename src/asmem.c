@@ -95,7 +95,7 @@ static Pixel pix_G[4][3];
 
 /* update stuff */
 static time_t lastTime_G = 0;
-static int updateRequest_G = 0;
+static bool updateRequest_G = false;
 
 /* ------------------------------------------------------------------------- */
 // meat and potatoes
@@ -588,7 +588,7 @@ x11_check_events (void)
 		switch (event.type) {
 			case Expose:
 				if (event.xexpose.count == 0)
-					++updateRequest_G;
+					updateRequest_G = true;
 				break;
 			case ClientMessage:
 				if ((event.xclient.message_type == wmProtocols_G) && (event.xclient.data.l[0] == wmDelWin_G)) {
@@ -608,7 +608,7 @@ asmem_redraw (void)
 	XCopyArea (dpy_pG, drawWin_G, mainWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	XCopyArea (dpy_pG, drawWin_G, iconWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 
-	updateRequest_G = 0;
+	updateRequest_G = false;
 }
 
 static void
@@ -626,7 +626,7 @@ x11_update (void)
 		if (memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t))) {
 			memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
 			x11_draw_window (drawWin_G);
-			++updateRequest_G;
+			updateRequest_G = true;
 		}
 	}
 
