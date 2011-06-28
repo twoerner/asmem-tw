@@ -9,12 +9,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <poll.h>
 #include <getopt.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <math.h>
-#include <time.h>
 
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
@@ -26,13 +25,10 @@
 
 #include "config.h"
 
-/*
- * default check and update intervals in microseconds
- *      x11 events - every 1/100 th of a second (in mks)
- *      Memory status - every second (in sec)
- */
-#define X11_INTERVAL 10000L
-#define CHK_INTERVAL 1
+// update frequency [ms]
+#define DEFAULT_INTERVAL 2000
+static int updateInterval_G = DEFAULT_INTERVAL;
+
 #define BUFFER_LENGTH 400
 
 /* ------------------------------------------------------------------------- */
@@ -61,6 +57,7 @@ static char* x11_lighten_char_colour (char *colourName_p, float rate, Display *d
 static Pixel x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
 static void x11_draw_window (Window win);
 static void x11_check_events (void);
+static void asmem_redraw (void);
 static void x11_update (void);
 static void x11_initialize (int argc, char *argv[]);
 
@@ -103,14 +100,45 @@ static bool updateRequest_G = false;
 int
 main (int argc, char *argv[])
 {
+	int xfd;
+	int timeout;
+
 	defaults ();
 	parse_cmdline (argc, argv);
 	x11_initialize (argc, argv);
-	while (1) {
-		x11_update ();
-		usleep (X11_INTERVAL);
+
+	xfd = ConnectionNumber (dpy_pG);
+	if (xfd == 0) {
+		printf ("warning: can't obtain connection number, redraws timed with updates\n");
+		while (1) {
+			x11_update ();
+			usleep ((useconds_t)updateInterval_G * 1000);
+		}
+	}
+	else {
+		int rtn;
+		struct pollfd fds[1];
+
+		memset (fds, 0, sizeof (fds));
+		fds[0].fd = xfd;
+		fds[0].events = POLLIN;
+
+		while (1) {
+			timeout = updateInterval_G;
+			rtn = poll (fds, 1, timeout);
+			if (rtn == -1) {
+				perror ("poll()");
+				continue;
+			}
+			if (rtn == 0) {
+				x11_update ();
+				continue;
+			}
+			asmem_redraw ();
+		}
 	}
 
+	cleanup ();
 	return 0;
 }
 
@@ -120,7 +148,6 @@ main (int argc, char *argv[])
 static void
 defaults (void)
 {
-	state_G.updateInterval = CHK_INTERVAL;
 	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
 	safe_copy (displayName_G, "", 50);
@@ -203,9 +230,9 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 'u':
-				state_G.updateInterval = atoi (optarg);
-				if (state_G.updateInterval < 1)
-					state_G.updateInterval = CHK_INTERVAL;
+				updateInterval_G = atoi (optarg);
+				if (updateInterval_G < 1)
+					updateInterval_G = DEFAULT_INTERVAL;
 				break;
 
 			case 0:
@@ -614,20 +641,25 @@ asmem_redraw (void)
 static void
 x11_update (void)
 {
-	time_t currentTime;
+	static bool firstTime = true;
+	bool different;
 
-	currentTime = time (0);
-	if (abs (currentTime - lastTime_G) >= state_G.updateInterval) {
-		lastTime_G = currentTime;
-		if (!read_meminfo ()) {
-			cleanup ();
-			exit (1);
-		}
-		if (memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t))) {
-			memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
-			x11_draw_window (drawWin_G);
-			updateRequest_G = true;
-		}
+	if (!read_meminfo ()) {
+		cleanup ();
+		exit (1);
+	}
+
+	if (firstTime) {
+		firstTime = false;
+		different = true;
+	}
+	else
+		different = memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
+
+	if (different) {
+		memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
+		x11_draw_window (drawWin_G);
+		updateRequest_G = true;
 	}
 
 	x11_check_events ();
