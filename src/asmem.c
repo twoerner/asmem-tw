@@ -26,7 +26,8 @@
 #define DEFAULT_INTERVAL 2000
 static int updateInterval_G = DEFAULT_INTERVAL;
 
-#define BUFFER_LENGTH 400
+#define STRSZ 32
+#define FNAMESZ 256
 
 /* ------------------------------------------------------------------------- */
 // prototypes
@@ -63,19 +64,19 @@ static void x11_initialize (int argc, char *argv[]);
 /* ------------------------------------------------------------------------- */
 static AsmemMeminfo_t last_G;
 static AsmemMeminfo_t fresh_G;
-static char displayName_G[50];
-static char mainGeometry_G[50];
+static char displayName_G[STRSZ];
+static char mainGeometry_G[STRSZ];
 static FILE *procMeminfoFile_pG = NULL;
-static char procMemFilename_G[256];
-static char tmpChar_G[50];
+static char procMemFilename_G[FNAMESZ];
+static char tmpChar_G[STRSZ];
 static bool verbose_G = false;
 
-static char bgColour_G[50];
-static char fgColour_G[50];
-static char memoryColour_G[50];
-static char bufferColour_G[50];
-static char cacheColour_G[50];
-static char swapColour_G[50];
+static char bgColour_G[STRSZ];
+static char fgColour_G[STRSZ];
+static char memoryColour_G[STRSZ];
+static char bufferColour_G[STRSZ];
+static char cacheColour_G[STRSZ];
+static char swapColour_G[STRSZ];
 
 /* X windows related global variables */
 static Display *dpy_pG = 0; /* The display we are working on */
@@ -90,8 +91,8 @@ static Atom wmProtocols_G;
 static Pixel bgPix_G, fgPix_G;
 
 /* pixmap stuff */
-static char pgPixColour_G[4][50];
-static char alphaColour_G[4][50];
+static char pgPixColour_G[4][STRSZ];
+static char alphaColour_G[4][STRSZ];
 static XpmIcon_t backgroundXpm_G;
 static XpmIcon_t alphabetXpm_G;
 static Pixel pix_G[4][3];
@@ -153,15 +154,15 @@ main (int argc, char *argv[])
 static void
 defaults (void)
 {
-	safe_copy (procMemFilename_G, PROC_MEM, 256);
-	safe_copy (displayName_G, "", 50);
-	safe_copy (mainGeometry_G, "", 50);
-	safe_copy (bgColour_G, "#303030", 50);
-	safe_copy (fgColour_G, "#20b2aa", 50);
-	safe_copy (memoryColour_G, "#4141d7", 50);
-	safe_copy (bufferColour_G, "#aa80aa", 50);
-	safe_copy (cacheColour_G, "#bebebe", 50);
-	safe_copy (swapColour_G, "#ffa649", 50);
+	safe_copy (procMemFilename_G, PROC_MEM, sizeof (procMemFilename_G));
+	safe_copy (displayName_G, "", sizeof (displayName_G));
+	safe_copy (mainGeometry_G, "", sizeof (mainGeometry_G));
+	safe_copy (bgColour_G, "#303030", sizeof (bgColour_G));
+	safe_copy (fgColour_G, "#20b2aa", sizeof (fgColour_G));
+	safe_copy (memoryColour_G, "#4141d7", sizeof (memoryColour_G));
+	safe_copy (bufferColour_G, "#aa80aa", sizeof (bufferColour_G));
+	safe_copy (cacheColour_G, "#bebebe", sizeof (cacheColour_G));
+	safe_copy (swapColour_G, "#ffa649", sizeof (swapColour_G));
 }
 
 static void
