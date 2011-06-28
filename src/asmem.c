@@ -68,9 +68,6 @@ static void x11_initialize (int argc, char *argv[]);
 // globals
 /* ------------------------------------------------------------------------- */
 static AsmemState_t state_G;
-static bool withdrawn_G = false;
-static bool iconic_G = false;
-static bool pushedIn_G = true;
 static char displayName_G[50];
 static char mainGeometry_G[50];
 static FILE *procMeminfoFile_pG = NULL;
@@ -126,9 +123,6 @@ defaults (void)
 	state_G.updateInterval = CHK_INTERVAL;
 	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
-	withdrawn_G = false;
-	iconic_G = false;
-	pushedIn_G = true;
 	safe_copy (displayName_G, "", 50);
 	safe_copy (mainGeometry_G, "", 50);
 	safe_copy (state_G.bgColor, "#303030", 50);
@@ -150,9 +144,6 @@ usage (void)
 	printf ("--used                     display used memory instead of free\n");
 	printf ("--display <name>           the name of the display to use\n");
 	printf ("--position <xy>            position on the screen (geometry)\n");
-	printf ("--withdrawn                start in withdrawn shape (for WindowMaker)\n");
-	printf ("--iconic                   start iconized\n");
-	printf ("--standout                 standing out rather than being pushed in\n");
 	printf ("--dev <device>             use the specified file as stat device\n");
 	printf ("--bg <color>               background color\n");
 	printf ("--fg <color>               base foreground color\n");
@@ -180,16 +171,13 @@ parse_cmdline (int argc, char *argv[])
 		{"used", no_argument, NULL, 0},
 		{"display", required_argument, NULL, 1},
 		{"position", required_argument, NULL, 2},
-		{"withdrawn", no_argument, NULL, 3},
-		{"iconic", no_argument, NULL, 4},
-		{"standout", no_argument, NULL, 5},
-		{"dev", required_argument, NULL, 6},
-		{"bg", required_argument, NULL, 7},
-		{"fg", required_argument, NULL, 8},
-		{"memory", required_argument, NULL, 9},
-		{"buffer", required_argument, NULL, 10},
-		{"cache", required_argument, NULL, 11},
-		{"swap", required_argument, NULL, 12},
+		{"dev", required_argument, NULL, 3},
+		{"bg", required_argument, NULL, 4},
+		{"fg", required_argument, NULL, 5},
+		{"memory", required_argument, NULL, 6},
+		{"buffer", required_argument, NULL, 7},
+		{"cache", required_argument, NULL, 8},
+		{"swap", required_argument, NULL, 9},
 		{NULL, 0, NULL, 0},
 	};
 
@@ -233,42 +221,30 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 3:
-				withdrawn_G = true;
-				break;
-
-			case 4:
-				iconic_G = true;
-				break;
-
-			case 5:
-				pushedIn_G = false;
-				break;
-
-			case 6:
 				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
 				break;
 
-			case 7:
+			case 4:
 				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
 				break;
 
-			case 8:
+			case 5:
 				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
 				break;
 
-			case 9:
+			case 6:
 				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
 				break;
 
-			case 10:
+			case 7:
 				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
 				break;
 
-			case 11:
+			case 8:
 				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
 				break;
 
-			case 12:
+			case 9:
 				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
 				break;
 		}
@@ -694,16 +670,9 @@ x11_initialize (int argc, char *argv[])
 
 	/* adjust the background pixmap */
 	sprintf (pgPixColour_G[3], "# c %s", state_G.fgColor);
-	if (pushedIn_G) {
-		sprintf (pgPixColour_G[0], ". c %s", x11_darken_char_colour (state_G.bgColor, 1.6, dpy_pG, rootWin_G));
-		sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
-		sprintf (pgPixColour_G[2], "q c %s", x11_lighten_char_colour (state_G.bgColor, 2.8, dpy_pG, rootWin_G));
-	}
-	else {
-		sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (state_G.bgColor, 1.2, dpy_pG, rootWin_G));
-		sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
-		sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (state_G.bgColor, 2.5, dpy_pG, rootWin_G));
-	}
+	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (state_G.bgColor, 1.2, dpy_pG, rootWin_G));
+	sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
+	sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (state_G.bgColor, 2.5, dpy_pG, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		background[tmp+1] = pgPixColour_G[tmp];
 
@@ -804,17 +773,8 @@ x11_initialize (int argc, char *argv[])
 	status = XSetWMProtocols (dpy_pG, iconWin_G, &wmDelWin_G, 1);
 
 	WmHints.flags = StateHint | IconWindowHint;
-	WmHints.initial_state = withdrawn_G ? WithdrawnState : iconic_G ? IconicState : NormalState;
+	WmHints.initial_state = NormalState;
 	WmHints.icon_window = iconWin_G;
-	if (withdrawn_G) {
-		WmHints.window_group = mainWin_G;
-		WmHints.flags |= WindowGroupHint;
-	}
-	if (iconic_G || withdrawn_G) {
-		WmHints.icon_x = SizeHints.x;
-		WmHints.icon_y = SizeHints.y;
-		WmHints.flags |= IconPositionHint;
-	}
 	XSetWMHints (dpy_pG, mainWin_G, &WmHints);
 
 	/* Finally show the window */
