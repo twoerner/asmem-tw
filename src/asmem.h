@@ -27,18 +27,6 @@ typedef struct {
 } AsmemMeminfo_t;
 
 typedef struct {
-	char procMemFilename[256];	/* the file to read for the memory info */
-	char bgColor[50];
-	char fgColor[50];
-	char memoryColor[50];
-	char bufferColor[50];
-	char cacheColor[50];
-	char swapColor[50];
-	AsmemMeminfo_t last;		/* the old data */
-	AsmemMeminfo_t fresh;		/* the new data */
-} AsmemState_t;
-
-typedef struct {
 	Pixmap pixmap;
 	Pixmap mask;
 	XpmAttributes attributes;

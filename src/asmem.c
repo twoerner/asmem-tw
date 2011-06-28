@@ -61,12 +61,21 @@ static void x11_initialize (int argc, char *argv[]);
 /* ------------------------------------------------------------------------- */
 // globals
 /* ------------------------------------------------------------------------- */
-static AsmemState_t state_G;
+static AsmemMeminfo_t last_G;
+static AsmemMeminfo_t fresh_G;
 static char displayName_G[50];
 static char mainGeometry_G[50];
 static FILE *procMeminfoFile_pG = NULL;
+static char procMemFilename_G[256];
 static char tmpChar_G[50];
 static bool verbose_G = false;
+
+static char bgColor_G[50];
+static char fgColor_G[50];
+static char memoryColor_G[50];
+static char bufferColor_G[50];
+static char cacheColor_G[50];
+static char swapColor_G[50];
 
 /* X windows related global variables */
 static Display *dpy_pG = 0; /* The display we are working on */
@@ -144,15 +153,15 @@ main (int argc, char *argv[])
 static void
 defaults (void)
 {
-	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
+	safe_copy (procMemFilename_G, PROC_MEM, 256);
 	safe_copy (displayName_G, "", 50);
 	safe_copy (mainGeometry_G, "", 50);
-	safe_copy (state_G.bgColor, "#303030", 50);
-	safe_copy (state_G.fgColor, "#20b2aa", 50);
-	safe_copy (state_G.memoryColor, "#4141d7", 50);
-	safe_copy (state_G.bufferColor, "#aa80aa", 50);
-	safe_copy (state_G.cacheColor, "#bebebe", 50);
-	safe_copy (state_G.swapColor, "#ffa649", 50);
+	safe_copy (bgColor_G, "#303030", 50);
+	safe_copy (fgColor_G, "#20b2aa", 50);
+	safe_copy (memoryColor_G, "#4141d7", 50);
+	safe_copy (bufferColor_G, "#aa80aa", 50);
+	safe_copy (cacheColor_G, "#bebebe", 50);
+	safe_copy (swapColor_G, "#ffa649", 50);
 }
 
 static void
@@ -237,31 +246,31 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 2:
-				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
+				safe_copy (procMemFilename_G, optarg, sizeof (procMemFilename_G));
 				break;
 
 			case 3:
-				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
+				safe_copy (bgColor_G, optarg, sizeof (bgColor_G));
 				break;
 
 			case 4:
-				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
+				safe_copy (fgColor_G, optarg, sizeof (fgColor_G));
 				break;
 
 			case 5:
-				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
+				safe_copy (memoryColor_G, optarg, sizeof (memoryColor_G));
 				break;
 
 			case 6:
-				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
+				safe_copy (bufferColor_G, optarg, sizeof (bufferColor_G));
 				break;
 
 			case 7:
-				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
+				safe_copy (cacheColor_G, optarg, sizeof (cacheColor_G));
 				break;
 
 			case 8:
-				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
+				safe_copy (swapColor_G, optarg, sizeof (swapColor_G));
 				break;
 		}
 	}
@@ -325,14 +334,14 @@ read_meminfo (void)
 		return false;
 	}
 
-	state_G.fresh.total = get_num ("MemTotal") / 1000;
-	state_G.fresh.free = get_num ("MemFree") / 1000;
-	state_G.fresh.buffers = get_num ("Buffers") / 1000;
-	state_G.fresh.cached = get_num ("Cached") / 1000;
-	state_G.fresh.swapTotal = get_num ("SwapTotal") / 1000;
-	state_G.fresh.swapFree = get_num ("SwapFree") / 1000;
-	state_G.fresh.swapUsed = state_G.fresh.swapTotal - state_G.fresh.swapFree;
-	state_G.fresh.used = state_G.fresh.total - state_G.fresh.free;
+	fresh_G.total = get_num ("MemTotal") / 1000;
+	fresh_G.free = get_num ("MemFree") / 1000;
+	fresh_G.buffers = get_num ("Buffers") / 1000;
+	fresh_G.cached = get_num ("Cached") / 1000;
+	fresh_G.swapTotal = get_num ("SwapTotal") / 1000;
+	fresh_G.swapFree = get_num ("SwapFree") / 1000;
+	fresh_G.swapUsed = fresh_G.swapTotal - fresh_G.swapFree;
+	fresh_G.used = fresh_G.total - fresh_G.free;
 
 	return true;
 }
@@ -340,7 +349,7 @@ read_meminfo (void)
 static bool
 open_meminfo (void)
 {
-	if ((procMeminfoFile_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
+	if ((procMeminfoFile_pG = fopen (procMemFilename_G, "r")) == NULL) {
 		perror ("fopen()");
 		return false;
 	}
@@ -475,7 +484,7 @@ x11_draw_window (Window win)
 	int digits;
 
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, win, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-	total = state_G.fresh.total;
+	total = fresh_G.total;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -487,8 +496,8 @@ x11_draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
-	freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
-	freeMem = state_G.fresh.total - freeMem;
+	freeMem = fresh_G.free + fresh_G.buffers + fresh_G.cached;
+	freeMem = fresh_G.total - freeMem;
 	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
@@ -501,8 +510,8 @@ x11_draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
 
-	if (state_G.fresh.total)
-		percentage = (int)(((float)freeMem) / ((float)state_G.fresh.total) * 100);
+	if (fresh_G.total)
+		percentage = (int)(((float)freeMem) / ((float)fresh_G.total) * 100);
 	else
 		percentage = 0;
 	if (percentage >= 100)
@@ -518,9 +527,9 @@ x11_draw_window (Window win)
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
 
-	points[0] = ((float)(state_G.fresh.used - state_G.fresh.buffers - state_G.fresh.cached)) / ((float)state_G.fresh.total) * 46;
-	points[1] = ((float)state_G.fresh.buffers) / ((float)state_G.fresh.total) * 46;
-	points[2] = ((float)state_G.fresh.cached) / ((float)state_G.fresh.total) * 46;
+	points[0] = ((float)(fresh_G.used - fresh_G.buffers - fresh_G.cached)) / ((float)fresh_G.total) * 46;
+	points[1] = ((float)fresh_G.buffers) / ((float)fresh_G.total) * 46;
+	points[2] = ((float)fresh_G.cached) / ((float)fresh_G.total) * 46;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[0][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
@@ -537,7 +546,7 @@ x11_draw_window (Window win)
 		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
-	total = state_G.fresh.swapTotal;
+	total = fresh_G.swapTotal;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -549,8 +558,8 @@ x11_draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
 
-	freeMem = state_G.fresh.swapFree;
-	freeMem = state_G.fresh.swapTotal - freeMem;
+	freeMem = fresh_G.swapFree;
+	freeMem = fresh_G.swapTotal - freeMem;
 	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
@@ -563,8 +572,8 @@ x11_draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
 
-	if (state_G.fresh.swapTotal)
-		percentage = (int) (((float)freeMem) / ((float)state_G.fresh.swapTotal) * 100);
+	if (fresh_G.swapTotal)
+		percentage = (int) (((float)freeMem) / ((float)fresh_G.swapTotal) * 100);
 	else
 		percentage = 0;
 	if (percentage >= 100)
@@ -580,7 +589,7 @@ x11_draw_window (Window win)
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
 
-	points[0] = ((float)state_G.fresh.swapUsed) / ((float)state_G.fresh.swapTotal) * 46;
+	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * 46;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[3][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
@@ -642,10 +651,10 @@ x11_update (void)
 		different = true;
 	}
 	else
-		different = memcmp (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
+		different = memcmp (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
 
 	if (different) {
-		memcpy (&state_G.last, &state_G.fresh, sizeof (AsmemMeminfo_t));
+		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
 		x11_draw_window (drawWin_G);
 		updateRequest_G = true;
 	}
@@ -682,17 +691,17 @@ x11_initialize (int argc, char *argv[])
 	}
 	screen = DefaultScreen (dpy_pG);
 	rootWin_G = RootWindow (dpy_pG, screen);
-	bgPix_G = x11_get_colour (state_G.bgColor, dpy_pG, rootWin_G);
-	fgPix_G = x11_get_colour (state_G.fgColor, dpy_pG, rootWin_G);
+	bgPix_G = x11_get_colour (bgColor_G, dpy_pG, rootWin_G);
+	fgPix_G = x11_get_colour (fgColor_G, dpy_pG, rootWin_G);
 	color_depth = DefaultDepth (dpy_pG, screen);
 	if (verbose_G)
 		printf ("asmem : detected color depth %d bpp, using %d bpp\n", color_depth, color_depth);
 
 	/* adjust the background pixmap */
-	sprintf (pgPixColour_G[3], "# c %s", state_G.fgColor);
-	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (state_G.bgColor, 1.2, dpy_pG, rootWin_G));
-	sprintf (pgPixColour_G[1], "c c %s", state_G.bgColor);
-	sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (state_G.bgColor, 2.5, dpy_pG, rootWin_G));
+	sprintf (pgPixColour_G[3], "# c %s", fgColor_G);
+	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (bgColor_G, 1.2, dpy_pG, rootWin_G));
+	sprintf (pgPixColour_G[1], "c c %s", bgColor_G);
+	sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (bgColor_G, 2.5, dpy_pG, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		background[tmp+1] = pgPixColour_G[tmp];
 
@@ -706,10 +715,10 @@ x11_initialize (int argc, char *argv[])
 	if (verbose_G)
 		printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
 
-	sprintf (alphaColour_G[0], ". c %s", state_G.bgColor);
-	sprintf (alphaColour_G[1], "# c %s", state_G.fgColor);
-	sprintf (alphaColour_G[2], "a c %s", x11_darken_char_colour (state_G.bgColor, 1.4, dpy_pG, rootWin_G));
-	sprintf (alphaColour_G[3], "c c %s", x11_darken_char_colour (state_G.fgColor, 1.6, dpy_pG, rootWin_G));
+	sprintf (alphaColour_G[0], ". c %s", bgColor_G);
+	sprintf (alphaColour_G[1], "# c %s", fgColor_G);
+	sprintf (alphaColour_G[2], "a c %s", x11_darken_char_colour (bgColor_G, 1.4, dpy_pG, rootWin_G));
+	sprintf (alphaColour_G[3], "c c %s", x11_darken_char_colour (fgColor_G, 1.6, dpy_pG, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		alphabet[tmp+1] = alphaColour_G[tmp];
 	alphabetXpm_G.attributes.valuemask |= (XpmReturnPixels | XpmReturnExtensions);
@@ -801,18 +810,18 @@ x11_initialize (int argc, char *argv[])
 	status = XMapWindow (dpy_pG, mainWin_G);
 
 	/* Get colors while waiting for Expose */
-	pix_G[0][0] = x11_lighten_colour (state_G.memoryColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[0][1] = x11_get_colour (state_G.memoryColor, dpy_pG, mainWin_G);
-	pix_G[0][2] = x11_darken_colour (state_G.memoryColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][0] = x11_lighten_colour (state_G.bufferColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][1] = x11_get_colour (state_G.bufferColor, dpy_pG, mainWin_G);
-	pix_G[1][2] = x11_darken_colour (state_G.bufferColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][0] = x11_lighten_colour (state_G.cacheColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][1] = x11_get_colour (state_G.cacheColor, dpy_pG, mainWin_G);
-	pix_G[2][2] = x11_darken_colour (state_G.cacheColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][0] = x11_lighten_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][1] = x11_get_colour (state_G.swapColor, dpy_pG, mainWin_G);
-	pix_G[3][2] = x11_darken_colour (state_G.swapColor, 1.4, dpy_pG, mainWin_G);
+	pix_G[0][0] = x11_lighten_colour (memoryColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[0][1] = x11_get_colour (memoryColor_G, dpy_pG, mainWin_G);
+	pix_G[0][2] = x11_darken_colour (memoryColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[1][0] = x11_lighten_colour (bufferColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[1][1] = x11_get_colour (bufferColor_G, dpy_pG, mainWin_G);
+	pix_G[1][2] = x11_darken_colour (bufferColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[2][0] = x11_lighten_colour (cacheColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[2][1] = x11_get_colour (cacheColor_G, dpy_pG, mainWin_G);
+	pix_G[2][2] = x11_darken_colour (cacheColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[3][0] = x11_lighten_colour (swapColor_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[3][1] = x11_get_colour (swapColor_G, dpy_pG, mainWin_G);
+	pix_G[3][2] = x11_darken_colour (swapColor_G, 1.4, dpy_pG, mainWin_G);
 
 	if (!open_meminfo ()) {
 		cleanup ();
