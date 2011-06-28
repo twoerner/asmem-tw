@@ -91,7 +91,6 @@ static XpmIcon_t alphabetXpm_G;
 static Pixel pix_G[4][3];
 
 /* update stuff */
-static time_t lastTime_G = 0;
 static bool updateRequest_G = false;
 
 /* ------------------------------------------------------------------------- */
@@ -342,7 +341,6 @@ read_meminfo (void)
 static bool
 open_meminfo (void)
 {
-	int result;
 	if ((procMeminfoFile_pG = fopen (state_G.procMemFilename, "r")) == NULL) {
 		perror ("fopen()");
 		return false;
