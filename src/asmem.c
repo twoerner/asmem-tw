@@ -303,14 +303,16 @@ get_num (char *marker_p)
 	do {
 		if (fgets (thebuf, sizeof (thebuf), procMeminfoFile_pG) == NULL) {
 			printf ("file error\n");
-			return (-1);
+			return -1;
 		}
 		else
 			if (strstr (thebuf, marker_p)) {
 				sscanf (thebuf, "%*s %d %*s\n", &theval);
-				return (theval);
+				return theval;
 			}
 	} while (!done);
+
+	return -1;
 }
 
 static bool
