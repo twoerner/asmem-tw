@@ -7,7 +7,9 @@
 #ifndef asmem__H
 #define asmem__H
 
+#include <stdio.h>
 #include <stdbool.h>
+#include <X11/xpm.h>
 
 /* file to read for stat info */
 #define PROC_MEM "/proc/meminfo"

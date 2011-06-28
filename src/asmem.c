@@ -11,9 +11,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include <getopt.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <ctype.h>
 
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
