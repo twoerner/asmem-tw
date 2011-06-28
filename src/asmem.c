@@ -124,7 +124,6 @@ static void
 defaults (void)
 {
 	state_G.updateInterval = CHK_INTERVAL;
-	state_G.standardFree = false;
 	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
 	withdrawn_G = false;
@@ -154,7 +153,6 @@ usage (void)
 	printf ("--withdrawn                start in withdrawn shape (for WindowMaker)\n");
 	printf ("--iconic                   start iconized\n");
 	printf ("--standout                 standing out rather than being pushed in\n");
-	printf ("--asis                     use free memory amount as read from device\n");
 	printf ("--dev <device>             use the specified file as stat device\n");
 	printf ("--bg <color>               background color\n");
 	printf ("--fg <color>               base foreground color\n");
@@ -185,14 +183,13 @@ parse_cmdline (int argc, char *argv[])
 		{"withdrawn", no_argument, NULL, 3},
 		{"iconic", no_argument, NULL, 4},
 		{"standout", no_argument, NULL, 5},
-		{"asis", no_argument, NULL, 6},
-		{"dev", required_argument, NULL, 7},
-		{"bg", required_argument, NULL, 8},
-		{"fg", required_argument, NULL, 9},
-		{"memory", required_argument, NULL, 10},
-		{"buffer", required_argument, NULL, 11},
-		{"cache", required_argument, NULL, 12},
-		{"swap", required_argument, NULL, 13},
+		{"dev", required_argument, NULL, 6},
+		{"bg", required_argument, NULL, 7},
+		{"fg", required_argument, NULL, 8},
+		{"memory", required_argument, NULL, 9},
+		{"buffer", required_argument, NULL, 10},
+		{"cache", required_argument, NULL, 11},
+		{"swap", required_argument, NULL, 12},
 		{NULL, 0, NULL, 0},
 	};
 
@@ -248,34 +245,30 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 6:
-				state_G.standardFree = true;
-				break;
-
-			case 7:
 				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
 				break;
 
-			case 8:
+			case 7:
 				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
 				break;
 
-			case 9:
+			case 8:
 				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
 				break;
 
-			case 10:
+			case 9:
 				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
 				break;
 
-			case 11:
+			case 10:
 				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
 				break;
 
-			case 12:
+			case 11:
 				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
 				break;
 
-			case 13:
+			case 12:
 				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
 				break;
 		}
@@ -338,12 +331,12 @@ read_meminfo (void)
 		return false;
 	}
 
-	state_G.fresh.total = get_num ("MemTotal") * 1024;
-	state_G.fresh.free = get_num ("MemFree") * 1024;
-	state_G.fresh.buffers = get_num ("Buffers") * 1024;
-	state_G.fresh.cached = get_num ("Cached") * 1024;
-	state_G.fresh.swapTotal = get_num ("SwapTotal") * 1024;
-	state_G.fresh.swapFree = get_num ("SwapFree") * 1024;
+	state_G.fresh.total = get_num ("MemTotal") / 1000;
+	state_G.fresh.free = get_num ("MemFree") / 1000;
+	state_G.fresh.buffers = get_num ("Buffers") / 1000;
+	state_G.fresh.cached = get_num ("Cached") / 1000;
+	state_G.fresh.swapTotal = get_num ("SwapTotal") / 1000;
+	state_G.fresh.swapFree = get_num ("SwapFree") / 1000;
 	state_G.fresh.swapUsed = state_G.fresh.swapTotal - state_G.fresh.swapFree;
 	state_G.fresh.used = state_G.fresh.total - state_G.fresh.free;
 
@@ -489,7 +482,7 @@ x11_draw_window (Window win)
 	int digits;
 
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, win, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-	total = state_G.fresh.total / 1024 / 1024;
+	total = state_G.fresh.total;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -501,13 +494,10 @@ x11_draw_window (Window win)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
-	if (state_G.standardFree)
-		freeMem = state_G.fresh.free;
-	else
-		freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
+	freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
 	if (state_G.showUsed)
 		freeMem = state_G.fresh.total - freeMem;
-	available = freeMem / 1024 / 1024;
+	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;
@@ -555,7 +545,7 @@ x11_draw_window (Window win)
 		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
-	total = state_G.fresh.swapTotal / 1024 / 1024;
+	total = state_G.fresh.swapTotal;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -570,7 +560,7 @@ x11_draw_window (Window win)
 	freeMem = state_G.fresh.swapFree;
 	if (state_G.showUsed)
 		freeMem = state_G.fresh.swapTotal - freeMem;
-	available = freeMem / 1024 / 1024;
+	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = available % 10;

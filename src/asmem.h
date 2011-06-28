@@ -26,7 +26,6 @@ typedef struct {
 
 typedef struct {
 	long int updateInterval;	/* interval (sec) to check the statistics */
-	bool standardFree;		/* use free memory as is */
 	bool showUsed;		 	/* show used instead of free */
 	char procMemFilename[256];	/* the file to read for the memory info */
 	char bgColor[50];
