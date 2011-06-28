@@ -148,7 +148,6 @@ main (int argc, char *argv[])
 static void
 defaults (void)
 {
-	state_G.showUsed = false;
 	safe_copy (state_G.procMemFilename, PROC_MEM, 256);
 	safe_copy (displayName_G, "", 50);
 	safe_copy (mainGeometry_G, "", 50);
@@ -168,7 +167,6 @@ usage (void)
 	printf ("-h | -H | --help           print this message and exit\n");
 	printf ("-v | --verbose             print debugging information\n");
 	printf ("-u | --update <secs>       the update interval in seconds\n");
-	printf ("--used                     display used memory instead of free\n");
 	printf ("--display <name>           the name of the display to use\n");
 	printf ("--position <xy>            position on the screen (geometry)\n");
 	printf ("--dev <device>             use the specified file as stat device\n");
@@ -195,16 +193,15 @@ parse_cmdline (int argc, char *argv[])
 		{"help", no_argument, NULL, 'h'},
 		{"verbose", no_argument, NULL, 'v'},
 		{"update", required_argument, NULL, 'u'},
-		{"used", no_argument, NULL, 0},
-		{"display", required_argument, NULL, 1},
-		{"position", required_argument, NULL, 2},
-		{"dev", required_argument, NULL, 3},
-		{"bg", required_argument, NULL, 4},
-		{"fg", required_argument, NULL, 5},
-		{"memory", required_argument, NULL, 6},
-		{"buffer", required_argument, NULL, 7},
-		{"cache", required_argument, NULL, 8},
-		{"swap", required_argument, NULL, 9},
+		{"display", required_argument, NULL, 0},
+		{"position", required_argument, NULL, 1},
+		{"dev", required_argument, NULL, 2},
+		{"bg", required_argument, NULL, 3},
+		{"fg", required_argument, NULL, 4},
+		{"memory", required_argument, NULL, 5},
+		{"buffer", required_argument, NULL, 6},
+		{"cache", required_argument, NULL, 7},
+		{"swap", required_argument, NULL, 8},
 		{NULL, 0, NULL, 0},
 	};
 
@@ -236,42 +233,38 @@ parse_cmdline (int argc, char *argv[])
 				break;
 
 			case 0:
-				state_G.showUsed = true;
-				break;
-
-			case 1:
 				safe_copy (displayName_G, optarg, sizeof (displayName_G));
 				break;
 
-			case 2:
+			case 1:
 				safe_copy (mainGeometry_G, optarg, sizeof (mainGeometry_G));
 				break;
 
-			case 3:
+			case 2:
 				safe_copy (state_G.procMemFilename, optarg, sizeof (state_G.procMemFilename));
 				break;
 
-			case 4:
+			case 3:
 				safe_copy (state_G.bgColor, optarg, sizeof (state_G.bgColor));
 				break;
 
-			case 5:
+			case 4:
 				safe_copy (state_G.fgColor, optarg, sizeof (state_G.fgColor));
 				break;
 
-			case 6:
+			case 5:
 				safe_copy (state_G.memoryColor, optarg, sizeof (state_G.memoryColor));
 				break;
 
-			case 7:
+			case 6:
 				safe_copy (state_G.bufferColor, optarg, sizeof (state_G.bufferColor));
 				break;
 
-			case 8:
+			case 7:
 				safe_copy (state_G.cacheColor, optarg, sizeof (state_G.cacheColor));
 				break;
 
-			case 9:
+			case 8:
 				safe_copy (state_G.swapColor, optarg, sizeof (state_G.swapColor));
 				break;
 		}
@@ -498,8 +491,7 @@ x11_draw_window (Window win)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
 	freeMem = state_G.fresh.free + state_G.fresh.buffers + state_G.fresh.cached;
-	if (state_G.showUsed)
-		freeMem = state_G.fresh.total - freeMem;
+	freeMem = state_G.fresh.total - freeMem;
 	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
@@ -561,8 +553,7 @@ x11_draw_window (Window win)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
 
 	freeMem = state_G.fresh.swapFree;
-	if (state_G.showUsed)
-		freeMem = state_G.fresh.swapTotal - freeMem;
+	freeMem = state_G.fresh.swapTotal - freeMem;
 	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {

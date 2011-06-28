@@ -25,7 +25,6 @@ typedef struct {
 } AsmemMeminfo_t;
 
 typedef struct {
-	bool showUsed;		 	/* show used instead of free */
 	char procMemFilename[256];	/* the file to read for the memory info */
 	char bgColor[50];
 	char fgColor[50];
