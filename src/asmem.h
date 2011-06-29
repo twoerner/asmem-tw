@@ -19,9 +19,6 @@ typedef struct {
 	unsigned long memCached;	/* cached memory */
 	unsigned long swapTotal;	/* total swap space */
 	unsigned long swapFree;		/* free swap space */
-
-	unsigned long memUsed;		/* the total of used memory */
-	unsigned long swapUsed;		/* used swap space */
 } AsmemMeminfo_t;
 
 typedef struct {

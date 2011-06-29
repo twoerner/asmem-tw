@@ -365,9 +365,6 @@ read_meminfo (void)
 	fresh_G.swapTotal = get_num ("SwapTotal") / 1000;
 	fresh_G.swapFree = get_num ("SwapFree") / 1000;
 
-	fresh_G.memUsed = fresh_G.memTotal - fresh_G.memFree;
-	fresh_G.swapUsed = fresh_G.swapTotal - fresh_G.swapFree;
-
 	return true;
 }
 
@@ -574,7 +571,7 @@ x11_draw_offscreen_win (void)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[i] * 5), 0, 6, 9, 32 + ((int)i * 5), 17);
 
 	// draw the memory bar
-	points[0] = (int)((((double)fresh_G.memUsed - (double)fresh_G.memBuffers - (double)fresh_G.memCached)) / ((double)fresh_G.memTotal) * (double)winWidth);
+	points[0] = (int)(((((double)fresh_G.memTotal - ((double)fresh_G.memFree)) - (double)fresh_G.memBuffers - (double)fresh_G.memCached)) / ((double)fresh_G.memTotal) * (double)winWidth);
 	points[1] = (int)(((double)fresh_G.memBuffers) / ((double)fresh_G.memTotal) * ((double)winWidth));
 	points[2] = (int)(((double)fresh_G.memCached) / ((double)fresh_G.memTotal) * ((double)winWidth));
 	for (i=0; i<3; ++i) {
@@ -635,7 +632,7 @@ x11_draw_offscreen_win (void)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[i] * 5), 0, 6, 9, (int)(32 + (i * 5)), 42);
 
 	// draw swap bar
-	points[0] = (int)(((double)fresh_G.swapUsed) / ((double)fresh_G.swapTotal) * ((double)winWidth));
+	points[0] = (int)((((double)fresh_G.swapTotal) - ((double)fresh_G.swapFree)) / ((double)fresh_G.swapTotal) * ((double)winWidth));
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cSWP][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
