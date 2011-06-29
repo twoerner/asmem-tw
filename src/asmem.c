@@ -48,12 +48,12 @@ static void close_meminfo (void);
 static void meminfo_update (void);
 
 // x11
-static Pixel x11_get_colour (char *colourName_p, Display *dpy_p, Window win);
-static XColor x11_parse_colour (char *colourName_p, Display *dpy_p, Window win);
-static char* x11_darken_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
-static Pixel x11_darken_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
-static char* x11_lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
-static Pixel x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
+static Pixel x11_get_colour (char *colourName_p, Window win);
+static XColor x11_parse_colour (char *colourName_p, Window win);
+static char* x11_darken_char_colour (char *colourName_p, float rate, Window win);
+static Pixel x11_darken_colour (char *colourName_p, float rate, Window win);
+static char* x11_lighten_char_colour (char *colourName_p, float rate, Window win);
+static Pixel x11_lighten_colour (char *colourName_p, float rate, Window win);
 static void x11_draw_offscreen_win (void);
 static void x11_draw_main_win_from_offscreen (void);
 static void x11_check_events (void);
@@ -399,38 +399,38 @@ meminfo_update (void)
  * of the given window and returns a pixel of that colour.
  */
 static Pixel
-x11_get_colour (char *colourName_p, Display *dpy_p, Window win)
+x11_get_colour (char *colourName_p, Window win)
 {
 	XColor colour;
 	XWindowAttributes attr;
 
-	XGetWindowAttributes (dpy_p, win, &attr);
+	XGetWindowAttributes (dpy_pG, win, &attr);
 	colour.pixel = 0;
 
-	if (!XParseColor (dpy_p, attr.colormap, colourName_p, &colour))
+	if (!XParseColor (dpy_pG, attr.colormap, colourName_p, &colour))
 		printf ("asmem: can't parse %s\n", colourName_p);
-	else if (!XAllocColor (dpy_p, attr.colormap, &colour))
+	else if (!XAllocColor (dpy_pG, attr.colormap, &colour))
 		printf ("asmem: can't allocate %s\n", colourName_p);
 
 	return colour.pixel;
 }
 
 /*
- * Performs the same actions as x11_get_colour but
+ * Performs the same actions as x11_get_colour() but
  * returns the complete XColor structure
  */
 static XColor
-x11_parse_colour (char *colourName_p, Display *dpy_p, Window win)
+x11_parse_colour (char *colourName_p, Window win)
 {
 	XColor colour;
 	XWindowAttributes attr;
 
-	XGetWindowAttributes (dpy_p, win, &attr);
+	XGetWindowAttributes (dpy_pG, win, &attr);
 	colour.pixel = 0;
 
-	if (!XParseColor (dpy_p, attr.colormap, colourName_p, &colour))
+	if (!XParseColor (dpy_pG, attr.colormap, colourName_p, &colour))
 		printf ("asmem: can't parse %s\n", colourName_p);
-	else if (!XAllocColor (dpy_p, attr.colormap, &colour))
+	else if (!XAllocColor (dpy_pG, attr.colormap, &colour))
 		printf ("asmem: can't allocate %s\n", colourName_p);
 
 	return colour;
@@ -438,13 +438,13 @@ x11_parse_colour (char *colourName_p, Display *dpy_p, Window win)
 
 /* darkens the given colour using the supplied rate */
 static char*
-x11_darken_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
+x11_darken_char_colour (char *colourName_p, float rate, Window win)
 {
 	XColor tmpColour;
 
 	if (verbose_G)
 		printf ("darkening %s ->", colourName_p);
-	tmpColour = x11_parse_colour (colourName_p, dpy_p, win);
+	tmpColour = x11_parse_colour (colourName_p, win);
 	if (verbose_G)
 		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 / rate;
@@ -459,20 +459,20 @@ x11_darken_char_colour (char *colourName_p, float rate, Display *dpy_p, Window w
 
 /* darkens the given colour using the supplied rate */
 static Pixel
-x11_darken_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
+x11_darken_colour (char *colourName_p, float rate, Window win)
 {
-	return x11_get_colour (x11_darken_char_colour (colourName_p, rate, dpy_p, win), dpy_p, win);
+	return x11_get_colour (x11_darken_char_colour (colourName_p, rate, win), win);
 }
 
 /* lightens the given colour using the supplied rate */
 static char*
-x11_lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
+x11_lighten_char_colour (char *colourName_p, float rate, Window win)
 {
 	XColor tmpColour;
 
 	if (verbose_G)
 		printf ("lightening %s ->", colourName_p);
-	tmpColour = x11_parse_colour (colourName_p, dpy_p, win);
+	tmpColour = x11_parse_colour (colourName_p, win);
 	if (verbose_G)
 		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 * rate;
@@ -493,9 +493,9 @@ x11_lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window 
 
 /* lightens the given colour using the supplied rate */
 static Pixel
-x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
+x11_lighten_colour (char *colourName_p, float rate, Window win)
 {
-	return x11_get_colour (x11_lighten_char_colour (colourName_p, rate, dpy_p, win), dpy_p, win);
+	return x11_get_colour (x11_lighten_char_colour (colourName_p, rate, win), win);
 }
 
 static void
@@ -694,17 +694,17 @@ x11_initialize (int argc, char *argv[])
 	}
 	screen = DefaultScreen (dpy_pG);
 	rootWin_G = RootWindow (dpy_pG, screen);
-	bgPix_G = x11_get_colour (bgColour_G, dpy_pG, rootWin_G);
-	fgPix_G = x11_get_colour (fgColour_G, dpy_pG, rootWin_G);
+	bgPix_G = x11_get_colour (bgColour_G, rootWin_G);
+	fgPix_G = x11_get_colour (fgColour_G, rootWin_G);
 	colourDepth = DefaultDepth (dpy_pG, screen);
 	if (verbose_G)
 		printf ("asmem : detected colour depth %d bpp, using %d bpp\n", colourDepth, colourDepth);
 
 	// adjust the background pixmap
 	sprintf (pgPixColour_G[3], "# c %s", fgColour_G);
-	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (bgColour_G, 1.2, dpy_pG, rootWin_G));
+	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (bgColour_G, 1.2, rootWin_G));
 	sprintf (pgPixColour_G[1], "c c %s", bgColour_G);
-	sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (bgColour_G, 2.5, dpy_pG, rootWin_G));
+	sprintf (pgPixColour_G[0], ". c %s", x11_lighten_char_colour (bgColour_G, 2.5, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		background[tmp+1] = pgPixColour_G[tmp];
 
@@ -720,8 +720,8 @@ x11_initialize (int argc, char *argv[])
 
 	sprintf (alphaColour_G[0], ". c %s", bgColour_G);
 	sprintf (alphaColour_G[1], "# c %s", fgColour_G);
-	sprintf (alphaColour_G[2], "a c %s", x11_darken_char_colour (bgColour_G, 1.4, dpy_pG, rootWin_G));
-	sprintf (alphaColour_G[3], "c c %s", x11_darken_char_colour (fgColour_G, 1.6, dpy_pG, rootWin_G));
+	sprintf (alphaColour_G[2], "a c %s", x11_darken_char_colour (bgColour_G, 1.4, rootWin_G));
+	sprintf (alphaColour_G[3], "c c %s", x11_darken_char_colour (fgColour_G, 1.6, rootWin_G));
 	for (tmp=0; tmp<4; ++tmp)
 		alphabet[tmp+1] = alphaColour_G[tmp];
 	alphabetXpm_G.attributes.valuemask |= (XpmReturnPixels | XpmReturnExtensions);
@@ -813,18 +813,18 @@ x11_initialize (int argc, char *argv[])
 	status = XMapWindow (dpy_pG, mainWin_G);
 
 	// get colours while waiting for Expose
-	pix_G[0][0] = x11_lighten_colour (memoryColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[0][1] = x11_get_colour (memoryColour_G, dpy_pG, mainWin_G);
-	pix_G[0][2] = x11_darken_colour (memoryColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][0] = x11_lighten_colour (bufferColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[1][1] = x11_get_colour (bufferColour_G, dpy_pG, mainWin_G);
-	pix_G[1][2] = x11_darken_colour (bufferColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][0] = x11_lighten_colour (cacheColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[2][1] = x11_get_colour (cacheColour_G, dpy_pG, mainWin_G);
-	pix_G[2][2] = x11_darken_colour (cacheColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][0] = x11_lighten_colour (swapColour_G, 1.4, dpy_pG, mainWin_G);
-	pix_G[3][1] = x11_get_colour (swapColour_G, dpy_pG, mainWin_G);
-	pix_G[3][2] = x11_darken_colour (swapColour_G, 1.4, dpy_pG, mainWin_G);
+	pix_G[0][0] = x11_lighten_colour (memoryColour_G, 1.4, mainWin_G);
+	pix_G[0][1] = x11_get_colour (memoryColour_G, mainWin_G);
+	pix_G[0][2] = x11_darken_colour (memoryColour_G, 1.4, mainWin_G);
+	pix_G[1][0] = x11_lighten_colour (bufferColour_G, 1.4, mainWin_G);
+	pix_G[1][1] = x11_get_colour (bufferColour_G, mainWin_G);
+	pix_G[1][2] = x11_darken_colour (bufferColour_G, 1.4, mainWin_G);
+	pix_G[2][0] = x11_lighten_colour (cacheColour_G, 1.4, mainWin_G);
+	pix_G[2][1] = x11_get_colour (cacheColour_G, mainWin_G);
+	pix_G[2][2] = x11_darken_colour (cacheColour_G, 1.4, mainWin_G);
+	pix_G[3][0] = x11_lighten_colour (swapColour_G, 1.4, mainWin_G);
+	pix_G[3][1] = x11_get_colour (swapColour_G, mainWin_G);
+	pix_G[3][2] = x11_darken_colour (swapColour_G, 1.4, mainWin_G);
 
 	if (!open_meminfo ()) {
 		cleanup ();
