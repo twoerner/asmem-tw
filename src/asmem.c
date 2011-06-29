@@ -130,6 +130,7 @@ main (int argc, char *argv[])
 	int xfd;
 	int timeout;
 
+	atexit (cleanup);
 	set_defaults ();
 	parse_cmdline (argc, argv);
 	x11_initialize (argc, argv);
@@ -315,8 +316,10 @@ safe_copy (char *dest_p, const char *src_p, size_t maxlen)
 static void
 cleanup (void)
 {
-	if (dpy_pG)
+	if (dpy_pG) {
 		XCloseDisplay (dpy_pG);
+		XFree (dpy_pG);
+	}
 	close_meminfo ();
 }
 
