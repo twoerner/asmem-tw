@@ -33,9 +33,9 @@ static int updateInterval_G = DEFAULT_INTERVAL;
 // prototypes
 /* ------------------------------------------------------------------------- */
 // general
-static void defaults (void);
-static void usage (void);
-static void version (void);
+static void set_defaults (void);
+static void print_usage (void);
+static void print_version (void);
 static void parse_cmdline (int argc, char *argv[]);
 static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
 static void cleanup (void);
@@ -45,6 +45,7 @@ static unsigned long get_num (char *marker_p);
 static bool read_meminfo (void);
 static bool open_meminfo (void);
 static void close_meminfo (void);
+static void meminfo_update (void);
 
 // x11
 static Pixel x11_get_colour (char *colourName_p, Display *dpy_p, Window win);
@@ -53,10 +54,9 @@ static char* x11_darken_char_colour (char *colourName_p, float rate, Display *dp
 static Pixel x11_darken_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
 static char* x11_lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
 static Pixel x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
-static void x11_draw_window (Window win);
+static void x11_draw_offscreen_win (Window win);
+static void x11_draw_main_win_from_offscreen (void);
 static void x11_check_events (void);
-static void asmem_redraw (void);
-static void x11_update (void);
 static void x11_initialize (int argc, char *argv[]);
 
 /* ------------------------------------------------------------------------- */
@@ -108,7 +108,7 @@ main (int argc, char *argv[])
 	int xfd;
 	int timeout;
 
-	defaults ();
+	set_defaults ();
 	parse_cmdline (argc, argv);
 	x11_initialize (argc, argv);
 
@@ -116,7 +116,7 @@ main (int argc, char *argv[])
 	if (xfd == 0) {
 		printf ("warning: can't obtain connection number, redraws timed with updates\n");
 		while (1) {
-			x11_update ();
+			meminfo_update ();
 			usleep ((useconds_t)updateInterval_G * 1000);
 		}
 	}
@@ -139,11 +139,11 @@ main (int argc, char *argv[])
 				continue;
 			}
 			if (rtn == 0) {
-				x11_update ();
+				meminfo_update ();
 				continue;
 			}
 			x11_check_events ();
-			asmem_redraw ();
+			x11_draw_main_win_from_offscreen ();
 		}
 	}
 
@@ -155,7 +155,7 @@ main (int argc, char *argv[])
 // helpers
 /* ------------------------------------------------------------------------- */
 static void
-defaults (void)
+set_defaults (void)
 {
 	safe_copy (procMemFilename_G, PROC_MEM, sizeof (procMemFilename_G));
 	safe_copy (displayName_G, "", sizeof (displayName_G));
@@ -169,7 +169,7 @@ defaults (void)
 }
 
 static void
-usage (void)
+print_usage (void)
 {
 	printf ("usage: asmem [options ...]\n\n");
 	printf ("-V | --version             print version and exit\n");
@@ -189,7 +189,7 @@ usage (void)
 }
 
 static void
-version (void)
+print_version (void)
 {
 	printf ("%s\n", PACKAGE_STRING);
 }
@@ -223,12 +223,12 @@ parse_cmdline (int argc, char *argv[])
 
 		switch (c) {
 			case 'V':
-				version ();
+				print_version ();
 				exit (0);
 
 			case 'h':
 			case 'H':
-				usage ();
+				print_usage ();
 				exit (0);
 
 			case 'v':
@@ -366,6 +366,35 @@ close_meminfo (void)
 	fclose (procMeminfoFile_pG);
 }
 
+static void
+meminfo_update (void)
+{
+	static bool firstTime = true;
+	bool different;
+
+	if (!read_meminfo ()) {
+		cleanup ();
+		exit (1);
+	}
+
+	if (firstTime) {
+		firstTime = false;
+		different = true;
+	}
+	else
+		different = memcmp (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
+
+	if (different) {
+		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
+		x11_draw_offscreen_win (drawWin_G);
+		updateRequest_G = true;
+	}
+
+	x11_check_events ();
+	if (updateRequest_G)
+		x11_draw_main_win_from_offscreen ();
+}
+
 /* ------------------------------------------------------------------------- */
 // x11
 /* ------------------------------------------------------------------------- */
@@ -476,7 +505,7 @@ x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
 }
 
 static void
-x11_draw_window (Window win)
+x11_draw_offscreen_win (Window win)
 {
 	int points[3];
 	unsigned int total;
@@ -638,41 +667,12 @@ x11_check_events (void)
 }
 
 static void
-asmem_redraw (void)
+x11_draw_main_win_from_offscreen (void)
 {
 	XCopyArea (dpy_pG, drawWin_G, mainWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	XCopyArea (dpy_pG, drawWin_G, iconWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 
 	updateRequest_G = false;
-}
-
-static void
-x11_update (void)
-{
-	static bool firstTime = true;
-	bool different;
-
-	if (!read_meminfo ()) {
-		cleanup ();
-		exit (1);
-	}
-
-	if (firstTime) {
-		firstTime = false;
-		different = true;
-	}
-	else
-		different = memcmp (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
-
-	if (different) {
-		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
-		x11_draw_window (drawWin_G);
-		updateRequest_G = true;
-	}
-
-	x11_check_events ();
-	if (updateRequest_G)
-		asmem_redraw ();
 }
 
 static void
@@ -847,7 +847,7 @@ x11_initialize (int argc, char *argv[])
 	XNextEvent (dpy_pG, &Event);
 
 	// we've got Expose -> draw the parts of the window
-	asmem_redraw ();
-	x11_update ();
+	meminfo_update ();
+	x11_draw_main_win_from_offscreen ();
 	XFlush (dpy_pG);
 }
