@@ -96,9 +96,6 @@ static XpmIcon_t backgroundXpm_G;
 static XpmIcon_t alphabetXpm_G;
 static Pixel pix_G[4][3];
 
-// update stuff
-static bool updateRequest_G = false;
-
 /* ------------------------------------------------------------------------- */
 // meat and potatoes
 /* ------------------------------------------------------------------------- */
@@ -387,12 +384,8 @@ meminfo_update (void)
 	if (different) {
 		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
 		x11_draw_offscreen_win ();
-		updateRequest_G = true;
-	}
-
-	x11_check_events ();
-	if (updateRequest_G)
 		x11_draw_main_win_from_offscreen ();
+	}
 }
 
 /* ------------------------------------------------------------------------- */
@@ -640,7 +633,7 @@ x11_check_events (void)
 		switch (event.type) {
 			case Expose:
 				if (event.xexpose.count == 0)
-					updateRequest_G = true;
+					x11_draw_main_win_from_offscreen ();
 				break;
 
 			case ClientMessage:
@@ -671,8 +664,6 @@ x11_draw_main_win_from_offscreen (void)
 {
 	XCopyArea (dpy_pG, drawWin_G, mainWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	XCopyArea (dpy_pG, drawWin_G, iconWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-
-	updateRequest_G = false;
 }
 
 static void
