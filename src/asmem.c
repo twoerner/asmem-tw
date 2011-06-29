@@ -41,7 +41,7 @@ static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
 static void cleanup (void);
 
 // file handling
-static int get_num (char *marker_p);
+static unsigned long get_num (char *marker_p);
 static bool read_meminfo (void);
 static bool open_meminfo (void);
 static void close_meminfo (void);
@@ -300,26 +300,27 @@ cleanup (void)
 /* ------------------------------------------------------------------------- */
 // file routines
 /* ------------------------------------------------------------------------- */
-static int
+static unsigned long
 get_num (char *marker_p)
 {
-	char thebuf[255];
-	int done = 0;
-	int theval;
+	char buf[255];
+	unsigned long val;
 
-	do {
-		if (fgets (thebuf, sizeof (thebuf), procMeminfoFile_pG) == NULL) {
-			printf ("file error\n");
-			return -1;
+	while (true) {
+		if (fgets (buf, sizeof (buf), procMeminfoFile_pG) == NULL) {
+			perror ("fgets()");
+			return (unsigned long)-1;
 		}
-		else
-			if (strstr (thebuf, marker_p)) {
-				sscanf (thebuf, "%*s %d %*s\n", &theval);
-				return theval;
-			}
-	} while (!done);
 
-	return -1;
+		if (strstr (buf, marker_p)) {
+			sscanf (buf, "%*s %lu %*s\n", &val);
+			if (verbose_G)
+				printf ("get_num() marker_p:%s val:%lu\n", marker_p, val);
+			return val;
+		}
+	}
+
+	return (unsigned long)-1;
 }
 
 static bool
