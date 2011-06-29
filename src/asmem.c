@@ -52,7 +52,7 @@ static void set_defaults (void);
 static void print_usage (void);
 static void print_version (void);
 static void parse_cmdline (int argc, char *argv[]);
-static char* safe_copy (char *dest_p, const char *src_p, unsigned short maxlen);
+static char* safe_copy (char *dest_p, const char *src_p, size_t maxlen);
 static void cleanup (void);
 
 // file handling
@@ -65,10 +65,10 @@ static void meminfo_update (void);
 // x11
 static Pixel x11_get_colour (char *colourName_p, Window win);
 static XColor x11_parse_colour (char *colourName_p, Window win);
-static char* x11_darken_char_colour (char *colourName_p, float rate, Window win);
-static Pixel x11_darken_colour (char *colourName_p, float rate, Window win);
-static char* x11_lighten_char_colour (char *colourName_p, float rate, Window win);
-static Pixel x11_lighten_colour (char *colourName_p, float rate, Window win);
+static char* x11_darken_char_colour (char *colourName_p, double rate, Window win);
+static Pixel x11_darken_colour (char *colourName_p, double rate, Window win);
+static char* x11_lighten_char_colour (char *colourName_p, double rate, Window win);
+static Pixel x11_lighten_colour (char *colourName_p, double rate, Window win);
 static void x11_draw_offscreen_win (void);
 static void x11_draw_main_win_from_offscreen (void);
 static void x11_check_events (void);
@@ -306,7 +306,7 @@ parse_cmdline (int argc, char *argv[])
  * Makes sure that the destination string is zero-terminated.
  */
 static char*
-safe_copy (char *dest_p, const char *src_p, unsigned short maxlen)
+safe_copy (char *dest_p, const char *src_p, size_t maxlen)
 {
 	dest_p[maxlen-1] = 0;
 	return strlen (src_p) < maxlen ? strcpy (dest_p, src_p) : strncpy (dest_p, src_p, maxlen-1);
@@ -461,16 +461,16 @@ x11_parse_colour (char *colourName_p, Window win)
 
 /* darkens the given colour using the supplied rate */
 static char*
-x11_darken_char_colour (char *colourName_p, float rate, Window win)
+x11_darken_char_colour (char *colourName_p, double rate, Window win)
 {
 	XColor tmpColour;
 
 	VERBOSE ("darkening %s ->", colourName_p);
 	tmpColour = x11_parse_colour (colourName_p, win);
 	VERBOSE (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
-	tmpColour.red = tmpColour.red / 257 / rate;
-	tmpColour.green = tmpColour.green / 257 / rate;
-	tmpColour.blue = tmpColour.blue / 257 / rate;
+	tmpColour.red = (unsigned short)((double)tmpColour.red / (double)257 / rate);
+	tmpColour.green = (unsigned short)((double)tmpColour.green / (double)257 / rate);
+	tmpColour.blue = (unsigned short)((double)tmpColour.blue / (double)257 / rate);
 	sprintf (tmpChar_G, "#%.2x%.2x%.2x", (int)tmpColour.red, (int)tmpColour.green, (int)tmpColour.blue);
 	VERBOSE ("-> %s\n", tmpChar_G);
 
@@ -479,23 +479,23 @@ x11_darken_char_colour (char *colourName_p, float rate, Window win)
 
 /* darkens the given colour using the supplied rate */
 static Pixel
-x11_darken_colour (char *colourName_p, float rate, Window win)
+x11_darken_colour (char *colourName_p, double rate, Window win)
 {
 	return x11_get_colour (x11_darken_char_colour (colourName_p, rate, win), win);
 }
 
 /* lightens the given colour using the supplied rate */
 static char*
-x11_lighten_char_colour (char *colourName_p, float rate, Window win)
+x11_lighten_char_colour (char *colourName_p, double rate, Window win)
 {
 	XColor tmpColour;
 
 	VERBOSE ("lightening %s ->", colourName_p);
 	tmpColour = x11_parse_colour (colourName_p, win);
 	VERBOSE (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
-	tmpColour.red = tmpColour.red / 257 * rate;
-	tmpColour.green = tmpColour.green / 257 * rate;
-	tmpColour.blue = tmpColour.blue / 257 * rate;
+	tmpColour.red = (unsigned short)((double)tmpColour.red / (double)257 * rate);
+	tmpColour.green = (unsigned short)((double)tmpColour.green / (double)257 * rate);
+	tmpColour.blue = (unsigned short)((double)tmpColour.blue / (double)257 * rate);
 	if (tmpColour.red > 255)
 		tmpColour.red = 255;
 	if (tmpColour.green > 255)
@@ -510,7 +510,7 @@ x11_lighten_char_colour (char *colourName_p, float rate, Window win)
 
 /* lightens the given colour using the supplied rate */
 static Pixel
-x11_lighten_colour (char *colourName_p, float rate, Window win)
+x11_lighten_colour (char *colourName_p, double rate, Window win)
 {
 	return x11_get_colour (x11_lighten_char_colour (colourName_p, rate, win), win);
 }
@@ -519,7 +519,7 @@ static void
 x11_draw_offscreen_win (void)
 {
 	int points[3];
-	unsigned val;
+	unsigned long val;
 	unsigned tmp[MAXDIGITS];
 	unsigned i, digitCnt;
 	int winWidth;
@@ -536,110 +536,110 @@ x11_draw_offscreen_win (void)
 	val = fresh_G.memTotal;
 	digitCnt = 0;
 	for (i=0; i<MAXDIGITS; ++i) {
-		tmp[i] = val % 10;
+		tmp[i] = (unsigned)(val % 10);
 		val /= 10;
 		++digitCnt;
 		if (val == 0)
 			break;
 	}
 	for (i=0; i<digitCnt; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, winWidth - (i * 5), 2);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[i] * 5), 0, 6, 9, (int)(winWidth - ((int)i * 5)), 2);
 
 	// string of memory used
 	val = fresh_G.memTotal - fresh_G.memFree;
 	digitCnt = 0;
 	for (i=0; i<MAXDIGITS; ++i) {
-		tmp[i] = val % 10;
+		tmp[i] = (unsigned)(val % 10);
 		val /= 10;
 		++digitCnt;
 		if (val == 0)
 			break;
 	}
 	for (i=0; i<digitCnt; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digitCnt-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[(int)digitCnt-1-(int)i] * 5), 0, 6, 9, 2 + ((int)i * 5), 17);
 
 	// string of percentage memory used
-	val = (int)((((float)fresh_G.memTotal) - ((float)fresh_G.memFree)) / ((float)fresh_G.memTotal) * 100);
+	val = (unsigned long)((((double)fresh_G.memTotal) - ((double)fresh_G.memFree)) / ((double)fresh_G.memTotal) * (double)100);
 	if (val >= 100)
-		tmp[0] = val / 100;
+		tmp[0] = (unsigned)(val / 100);
 	else
 		tmp[0] = 13;
 	if (val >= 10)
-		tmp[1] = val % 100 / 10;
+		tmp[1] = (unsigned)(val % 100 / 10);
 	else
 		tmp[1] = 10;
-	tmp[2] = val % 100 % 10;
+	tmp[2] = (unsigned)(val % 100 % 10);
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[i] * 5), 0, 6, 9, 32 + ((int)i * 5), 17);
 
 	// draw the memory bar
-	points[0] = ((float)(fresh_G.memUsed - fresh_G.memBuffers - fresh_G.memCached)) / ((float)fresh_G.memTotal) * winWidth;
-	points[1] = ((float)fresh_G.memBuffers) / ((float)fresh_G.memTotal) * winWidth;
-	points[2] = ((float)fresh_G.memCached) / ((float)fresh_G.memTotal) * winWidth;
+	points[0] = (int)((((double)fresh_G.memUsed - (double)fresh_G.memBuffers - (double)fresh_G.memCached)) / ((double)fresh_G.memTotal) * (double)winWidth);
+	points[1] = (int)(((double)fresh_G.memBuffers) / ((double)fresh_G.memTotal) * ((double)winWidth));
+	points[2] = (int)(((double)fresh_G.memCached) / ((double)fresh_G.memTotal) * ((double)winWidth));
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cMEM][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 13 + i, points[0], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, (int)(13 + i), (unsigned)points[0], 1);
 	}
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cBUF][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0], 13 + i, points[1], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0], (int)(13 + i), (unsigned)points[1], 1);
 	}
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cCHE][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0] + (int)points[1], (int)(13 + i), (unsigned)points[2], 1);
 	}
 
 	// string of swap total
 	val = fresh_G.swapTotal;
 	digitCnt = 0;
 	for (i=0; i<MAXDIGITS; ++i) {
-		tmp[i] = val % 10;
+		tmp[i] = (unsigned)val % 10;
 		val /= 10;
 		++digitCnt;
 		if (val == 0)
 			break;
 	}
 	for (i=0; i<digitCnt; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, winWidth - (i * 5), 27);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)tmp[i] * 5, 0, 6, 9, (int)(winWidth - ((int)i * 5)), 27);
 
 	// string of swap used
 	val = fresh_G.swapTotal - fresh_G.swapFree;
 	digitCnt = 0;
 	for (i=0; i<MAXDIGITS; ++i) {
-		tmp[i] = val % 10;
+		tmp[i] = (unsigned)val % 10;
 		val /= 10;
 		++digitCnt;
 		if (val == 0)
 			break;
 	}
 	for (i=0; i<digitCnt; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digitCnt-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[digitCnt-1-i] * 5), 0, 6, 9, (int)(2 + (i * 5)), 42);
 
 	// string of percentage swap used
-	val = (int) ((((float)fresh_G.swapTotal) - ((float)fresh_G.swapFree)) / ((float)fresh_G.swapTotal) * 100);
+	val = (unsigned long)((((double)fresh_G.swapTotal) - ((double)fresh_G.swapFree)) / ((double)fresh_G.swapTotal) * ((double)100));
 	if (val >= 100)
-		tmp[0] = val / 100;
+		tmp[0] = (unsigned)val / 100;
 	else
 		tmp[0] = 13;
 	if (val >= 10)
-		tmp[1] = val % 100 / 10;
+		tmp[1] = (unsigned)val % 100 / 10;
 	else
 		tmp[1] = 10;
-	tmp[2] = val % 100 % 10;
+	tmp[2] = (unsigned)val % 100 % 10;
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, (int)(tmp[i] * 5), 0, 6, 9, (int)(32 + (i * 5)), 42);
 
 	// draw swap bar
-	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * winWidth;
+	points[0] = (int)(((double)fresh_G.swapUsed) / ((double)fresh_G.swapTotal) * ((double)winWidth));
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cSWP][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 38 + i, points[0], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, (int)(38 + i), (unsigned)points[0], 1);
 	}
 }
 
@@ -659,7 +659,7 @@ x11_check_events (void)
 				break;
 
 			case ClientMessage:
-				if ((event.xclient.message_type == wmProtocols_G) && (event.xclient.data.l[0] == wmDelWin_G)) {
+				if ((event.xclient.message_type == wmProtocols_G) && ((Atom)event.xclient.data.l[0] == wmDelWin_G)) {
 					VERBOSE ("caught wmDelWin_G, closing\n");
 					cleanup ();
 					exit (0);
@@ -700,7 +700,7 @@ x11_initialize (int argc, char *argv[])
 	int gravity;
 	XWMHints WmHints;
 	XEvent Event;
-	int colourDepth;
+	unsigned colourDepth;
 	int tmp;
 	int result;
 	int x_negative = 0;
@@ -716,8 +716,8 @@ x11_initialize (int argc, char *argv[])
 	rootWin_G = RootWindow (dpy_pG, screen);
 	bgPix_G = x11_get_colour (bgColour_G, rootWin_G);
 	fgPix_G = x11_get_colour (fgColour_G, rootWin_G);
-	colourDepth = DefaultDepth (dpy_pG, screen);
-	VERBOSE ("asmem : detected colour depth %d bpp, using %d bpp\n", colourDepth, colourDepth);
+	colourDepth = (unsigned)DefaultDepth (dpy_pG, screen);
+	VERBOSE ("asmem : detected colour depth %u bpp, using %u bpp\n", colourDepth, colourDepth);
 
 	// adjust the background pixmap
 	sprintf (pgPixColour_G[3], "# c %s", fgColour_G);
@@ -752,7 +752,7 @@ x11_initialize (int argc, char *argv[])
 
 	if (strlen (mainGeometry_G)) {
 		// check the user-specified size
-		result = XParseGeometry (mainGeometry_G, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height);
+		result = XParseGeometry (mainGeometry_G, &SizeHints.x, &SizeHints.y, (unsigned*)&SizeHints.width, (unsigned*)&SizeHints.height);
 		if (result & XNegative)
 			x_negative = 1;
 		if (result & YNegative)
@@ -763,8 +763,8 @@ x11_initialize (int argc, char *argv[])
 	SizeHints.x = 0;
 	SizeHints.y = 0;
 	XWMGeometry (dpy_pG, screen, mainGeometry_G, NULL, 1, & SizeHints, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height, &gravity);
-	SizeHints.min_width = SizeHints.max_width = SizeHints.width = backgroundXpm_G.attributes.width;
-	SizeHints.min_height = SizeHints.max_height = SizeHints.height= backgroundXpm_G.attributes.height;
+	SizeHints.min_width = SizeHints.max_width = SizeHints.width = (int)backgroundXpm_G.attributes.width;
+	SizeHints.min_height = SizeHints.max_height = SizeHints.height = (int)backgroundXpm_G.attributes.height;
 	SizeHints.flags |= PMinSize|PMaxSize;
 
 	// correct the offsets if the X/Y are negative
@@ -782,9 +782,9 @@ x11_initialize (int argc, char *argv[])
 	}
 	SizeHints.flags |= PWinGravity;
 
-	drawWin_G = XCreatePixmap (dpy_pG, rootWin_G, SizeHints.width, SizeHints.height, colourDepth);
-	mainWin_G = XCreateSimpleWindow (dpy_pG, rootWin_G, SizeHints.x, SizeHints.y, SizeHints.width, SizeHints.height, 0, fgPix_G, bgPix_G);
-	iconWin_G = XCreateSimpleWindow (dpy_pG, rootWin_G, SizeHints.x, SizeHints.y, SizeHints.width, SizeHints.height, 0, fgPix_G, bgPix_G);
+	drawWin_G = XCreatePixmap (dpy_pG, rootWin_G, (unsigned)SizeHints.width, (unsigned)SizeHints.height, colourDepth);
+	mainWin_G = XCreateSimpleWindow (dpy_pG, rootWin_G, (int)SizeHints.x, (int)SizeHints.y, (unsigned)SizeHints.width, (unsigned)SizeHints.height, 0, fgPix_G, bgPix_G);
+	iconWin_G = XCreateSimpleWindow (dpy_pG, rootWin_G, (int)SizeHints.x, (int)SizeHints.y, (unsigned)SizeHints.width, (unsigned)SizeHints.height, 0, (unsigned)fgPix_G, (unsigned)bgPix_G);
 	XSetWMNormalHints (dpy_pG, mainWin_G, &SizeHints);
 	status = XClearWindow (dpy_pG, mainWin_G);
 
