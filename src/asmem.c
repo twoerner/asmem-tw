@@ -406,6 +406,7 @@ meminfo_update (void)
 		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
 		x11_draw_offscreen_win ();
 		x11_draw_main_win_from_offscreen ();
+		x11_check_events ();
 	}
 }
 
