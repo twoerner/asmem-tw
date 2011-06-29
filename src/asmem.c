@@ -107,6 +107,16 @@ static char pgPixColour_G[4][STRSZ];
 static char alphaColour_G[4][STRSZ];
 static XpmIcon_t backgroundXpm_G;
 static XpmIcon_t alphabetXpm_G;
+
+// first index, what the colour is for
+#define cMEM 0 // memory
+#define cBUF 1 // buffer
+#define cCHE 2 // cache
+#define cSWP 3 // swap
+// second index, the colour's hue
+#define cLGT 0 // light
+#define cREG 1 // regular
+#define cDRK 2 // dark
 static Pixel pix_G[4][3];
 
 /* ------------------------------------------------------------------------- */
@@ -565,17 +575,17 @@ x11_draw_offscreen_win (void)
 	points[1] = ((float)fresh_G.memBuffers) / ((float)fresh_G.memTotal) * 46;
 	points[2] = ((float)fresh_G.memCached) / ((float)fresh_G.memTotal) * 46;
 	for (i=0; i<3; ++i) {
-		mainGCV_G.foreground = pix_G[0][i];
+		mainGCV_G.foreground = pix_G[cMEM][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
 		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 13 + i, points[0], 1);
 	}
 	for (i=0; i<3; ++i) {
-		mainGCV_G.foreground = pix_G[1][i];
+		mainGCV_G.foreground = pix_G[cBUF][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
 		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0], 13 + i, points[1], 1);
 	}
 	for (i=0; i<3; ++i) {
-		mainGCV_G.foreground = pix_G[2][i];
+		mainGCV_G.foreground = pix_G[cCHE][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
 		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
@@ -625,7 +635,7 @@ x11_draw_offscreen_win (void)
 
 	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * 46;
 	for (i=0; i<3; ++i) {
-		mainGCV_G.foreground = pix_G[3][i];
+		mainGCV_G.foreground = pix_G[cSWP][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
 		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 38 + i, points[0], 1);
 	}
@@ -819,18 +829,18 @@ x11_initialize (int argc, char *argv[])
 	status = XMapWindow (dpy_pG, mainWin_G);
 
 	// get colours while waiting for Expose
-	pix_G[0][0] = x11_lighten_colour (memoryColour_G, 1.4, mainWin_G);
-	pix_G[0][1] = x11_get_colour (memoryColour_G, mainWin_G);
-	pix_G[0][2] = x11_darken_colour (memoryColour_G, 1.4, mainWin_G);
-	pix_G[1][0] = x11_lighten_colour (bufferColour_G, 1.4, mainWin_G);
-	pix_G[1][1] = x11_get_colour (bufferColour_G, mainWin_G);
-	pix_G[1][2] = x11_darken_colour (bufferColour_G, 1.4, mainWin_G);
-	pix_G[2][0] = x11_lighten_colour (cacheColour_G, 1.4, mainWin_G);
-	pix_G[2][1] = x11_get_colour (cacheColour_G, mainWin_G);
-	pix_G[2][2] = x11_darken_colour (cacheColour_G, 1.4, mainWin_G);
-	pix_G[3][0] = x11_lighten_colour (swapColour_G, 1.4, mainWin_G);
-	pix_G[3][1] = x11_get_colour (swapColour_G, mainWin_G);
-	pix_G[3][2] = x11_darken_colour (swapColour_G, 1.4, mainWin_G);
+	pix_G[cMEM][cLGT] = x11_lighten_colour (memoryColour_G, 1.4, mainWin_G);
+	pix_G[cMEM][cREG] = x11_get_colour (memoryColour_G, mainWin_G);
+	pix_G[cMEM][cDRK] = x11_darken_colour (memoryColour_G, 1.4, mainWin_G);
+	pix_G[cBUF][cLGT] = x11_lighten_colour (bufferColour_G, 1.4, mainWin_G);
+	pix_G[cBUF][cREG] = x11_get_colour (bufferColour_G, mainWin_G);
+	pix_G[cBUF][cDRK] = x11_darken_colour (bufferColour_G, 1.4, mainWin_G);
+	pix_G[cCHE][cLGT] = x11_lighten_colour (cacheColour_G, 1.4, mainWin_G);
+	pix_G[cCHE][cREG] = x11_get_colour (cacheColour_G, mainWin_G);
+	pix_G[cCHE][cDRK] = x11_darken_colour (cacheColour_G, 1.4, mainWin_G);
+	pix_G[cSWP][cLGT] = x11_lighten_colour (swapColour_G, 1.4, mainWin_G);
+	pix_G[cSWP][cREG] = x11_get_colour (swapColour_G, mainWin_G);
+	pix_G[cSWP][cDRK] = x11_darken_colour (swapColour_G, 1.4, mainWin_G);
 
 	if (!open_meminfo ()) {
 		cleanup ();
