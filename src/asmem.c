@@ -335,14 +335,15 @@ read_meminfo (void)
 		return false;
 	}
 
-	fresh_G.total = get_num ("MemTotal") / 1000;
-	fresh_G.free = get_num ("MemFree") / 1000;
-	fresh_G.buffers = get_num ("Buffers") / 1000;
-	fresh_G.cached = get_num ("Cached") / 1000;
+	fresh_G.memTotal = get_num ("MemTotal") / 1000;
+	fresh_G.memFree = get_num ("MemFree") / 1000;
+	fresh_G.memBuffers = get_num ("Buffers") / 1000;
+	fresh_G.memCached = get_num ("Cached") / 1000;
 	fresh_G.swapTotal = get_num ("SwapTotal") / 1000;
 	fresh_G.swapFree = get_num ("SwapFree") / 1000;
+
+	fresh_G.memUsed = fresh_G.memTotal - fresh_G.memFree;
 	fresh_G.swapUsed = fresh_G.swapTotal - fresh_G.swapFree;
-	fresh_G.used = fresh_G.total - fresh_G.free;
 
 	return true;
 }
@@ -510,7 +511,7 @@ x11_draw_offscreen_win (void)
 	int digits;
 
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, drawWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-	total = fresh_G.total;
+	total = fresh_G.memTotal;
 	digits = 0;
 	for (i=0; i<6; ++i) {
 		tmp[i] = total % 10;
@@ -522,8 +523,8 @@ x11_draw_offscreen_win (void)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
-	freeMem = fresh_G.free + fresh_G.buffers + fresh_G.cached;
-	freeMem = fresh_G.total - freeMem;
+	freeMem = fresh_G.memFree + fresh_G.memBuffers + fresh_G.memCached;
+	freeMem = fresh_G.memTotal - freeMem;
 	available = freeMem;
 	digits = 0;
 	for (i=0; i<6; ++i) {
@@ -536,8 +537,8 @@ x11_draw_offscreen_win (void)
 	for (i=0; i<digits; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
 
-	if (fresh_G.total)
-		percentage = (int)(((float)freeMem) / ((float)fresh_G.total) * 100);
+	if (fresh_G.memTotal)
+		percentage = (int)(((float)freeMem) / ((float)fresh_G.memTotal) * 100);
 	else
 		percentage = 0;
 	if (percentage >= 100)
@@ -553,9 +554,9 @@ x11_draw_offscreen_win (void)
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
 
-	points[0] = ((float)(fresh_G.used - fresh_G.buffers - fresh_G.cached)) / ((float)fresh_G.total) * 46;
-	points[1] = ((float)fresh_G.buffers) / ((float)fresh_G.total) * 46;
-	points[2] = ((float)fresh_G.cached) / ((float)fresh_G.total) * 46;
+	points[0] = ((float)(fresh_G.memUsed - fresh_G.memBuffers - fresh_G.memCached)) / ((float)fresh_G.memTotal) * 46;
+	points[1] = ((float)fresh_G.memBuffers) / ((float)fresh_G.memTotal) * 46;
+	points[2] = ((float)fresh_G.memCached) / ((float)fresh_G.memTotal) * 46;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[0][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);

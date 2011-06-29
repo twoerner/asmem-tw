@@ -13,14 +13,15 @@
 #define PROC_MEM "/proc/meminfo"
 
 typedef struct {
-	unsigned long total;		/* total memory available */
-	unsigned long used;		/* the total of used memory */
-	unsigned long free;		/* free memory */
-	unsigned long buffers;		/* buffers memory */
-	unsigned long cached;		/* cached memory */
+	unsigned long memTotal;		/* total memory available */
+	unsigned long memFree;		/* free memory */
+	unsigned long memBuffers;	/* buffers memory */
+	unsigned long memCached;	/* cached memory */
 	unsigned long swapTotal;	/* total swap space */
-	unsigned long swapUsed;		/* used swap space */
 	unsigned long swapFree;		/* free swap space */
+
+	unsigned long memUsed;		/* the total of used memory */
+	unsigned long swapUsed;		/* used swap space */
 } AsmemMeminfo_t;
 
 typedef struct {
