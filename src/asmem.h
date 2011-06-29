@@ -9,10 +9,9 @@
 
 #include <X11/xpm.h>
 
-/* file to read for stat info */
+// file to read for memory info
 #define PROC_MEM "/proc/meminfo"
 
-/* The structure defines what memory information we use */
 typedef struct {
 	unsigned long total;		/* total memory available */
 	unsigned long used;		/* the total of used memory */

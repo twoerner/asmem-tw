@@ -78,26 +78,24 @@ static char bufferColour_G[STRSZ];
 static char cacheColour_G[STRSZ];
 static char swapColour_G[STRSZ];
 
-/* X windows related global variables */
-static Display *dpy_pG = 0; /* The display we are working on */
-static Window rootWin_G; /* The root window of X11 */
-static Window drawWin_G; /* A hidden window for drawing */
-static Window mainWin_G; /* Application window */
-static Window iconWin_G; /* Icon window */
-static XGCValues mainGCV_G; /* graphics context values */
-static GC mainGC_G; /* Graphics context */
+static Display *dpy_pG = 0;
+static Window rootWin_G;
+static Window drawWin_G;
+static Window mainWin_G;
+static Window iconWin_G;
+static XGCValues mainGCV_G;
+static GC mainGC_G;
 static Atom wmDelWin_G;
 static Atom wmProtocols_G;
 static Pixel bgPix_G, fgPix_G;
 
-/* pixmap stuff */
 static char pgPixColour_G[4][STRSZ];
 static char alphaColour_G[4][STRSZ];
 static XpmIcon_t backgroundXpm_G;
 static XpmIcon_t alphabetXpm_G;
 static Pixel pix_G[4][3];
 
-/* update stuff */
+// update stuff
 static bool updateRequest_G = false;
 
 /* ------------------------------------------------------------------------- */
@@ -284,7 +282,6 @@ parse_cmdline (int argc, char *argv[])
 static char*
 safe_copy (char *dest_p, const char *src_p, unsigned short maxlen)
 {
-	/* safety precaution */
 	dest_p[maxlen-1] = 0;
 	return strlen (src_p) < maxlen ? strcpy (dest_p, src_p) : strncpy (dest_p, src_p, maxlen-1);
 }
@@ -599,11 +596,6 @@ x11_draw_window (Window win)
 	}
 }
 
-/*
- * This checks for X11 events. We distinguish the following:
- * - request to repaint the window
- * - request to quit (Close button)
- */
 static void
 x11_check_events (void)
 {
@@ -699,7 +691,7 @@ x11_initialize (int argc, char *argv[])
 	if (verbose_G)
 		printf ("asmem : detected colour depth %d bpp, using %d bpp\n", colourDepth, colourDepth);
 
-	/* adjust the background pixmap */
+	// adjust the background pixmap
 	sprintf (pgPixColour_G[3], "# c %s", fgColour_G);
 	sprintf (pgPixColour_G[2], "q c %s", x11_darken_char_colour (bgColour_G, 1.2, dpy_pG, rootWin_G));
 	sprintf (pgPixColour_G[1], "c c %s", bgColour_G);
@@ -732,7 +724,7 @@ x11_initialize (int argc, char *argv[])
 	}
 
 	if (strlen (mainGeometry_G)) {
-		/* Check the user-specified size */
+		// check the user-specified size
 		result = XParseGeometry (mainGeometry_G, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height);
 		if (result & XNegative)
 			x_negative = 1;
@@ -748,7 +740,7 @@ x11_initialize (int argc, char *argv[])
 	SizeHints.min_height = SizeHints.max_height = SizeHints.height= backgroundXpm_G.attributes.height;
 	SizeHints.flags |= PMinSize|PMaxSize;
 
-	/* Correct the offsets if the X/Y are negative */
+	// correct the offsets if the X/Y are negative
 	SizeHints.win_gravity = NorthWestGravity;
 	if (x_negative) {
 		SizeHints.x -= SizeHints.width;
@@ -786,7 +778,7 @@ x11_initialize (int argc, char *argv[])
 	status = XSelectInput (dpy_pG, mainWin_G, ExposureMask);
 	status = XSelectInput (dpy_pG, iconWin_G, ExposureMask);
 
-	/* Creating Graphics context */
+	// creating GC
 	mainGCV_G.foreground = fgPix_G;
 	mainGCV_G.background = bgPix_G;
 	mainGCV_G.graphics_exposures = False;
@@ -797,7 +789,7 @@ x11_initialize (int argc, char *argv[])
 
 	status = XSetCommand (dpy_pG, mainWin_G, argv, argc);
 
-	/* Set up the event for quitting the window */
+	// set up the event for quitting the window
 	wmDelWin_G = XInternAtom (dpy_pG, "WM_DELETE_WINDOW", False);
 	wmProtocols_G = XInternAtom (dpy_pG, "WM_PROTOCOLS", False);
 	status = XSetWMProtocols (dpy_pG, mainWin_G, &wmDelWin_G, 1);
@@ -808,10 +800,10 @@ x11_initialize (int argc, char *argv[])
 	WmHints.icon_window = iconWin_G;
 	XSetWMHints (dpy_pG, mainWin_G, &WmHints);
 
-	/* Finally show the window */
+	// finally show the window
 	status = XMapWindow (dpy_pG, mainWin_G);
 
-	/* Get colours while waiting for Expose */
+	// get colours while waiting for Expose
 	pix_G[0][0] = x11_lighten_colour (memoryColour_G, 1.4, dpy_pG, mainWin_G);
 	pix_G[0][1] = x11_get_colour (memoryColour_G, dpy_pG, mainWin_G);
 	pix_G[0][2] = x11_darken_colour (memoryColour_G, 1.4, dpy_pG, mainWin_G);
@@ -834,9 +826,10 @@ x11_initialize (int argc, char *argv[])
 		exit (1);
 	}
 
-	/* wait for the Expose event now */
+	// wait for the Expose event now
 	XNextEvent (dpy_pG, &Event);
-	/* We 've got Expose -> draw the parts of the window. */
+
+	// we've got Expose -> draw the parts of the window
 	asmem_redraw ();
 	x11_update ();
 	XFlush (dpy_pG);
