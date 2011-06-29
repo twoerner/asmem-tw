@@ -38,8 +38,8 @@ static int updateInterval_G = DEFAULT_INTERVAL;
 			strcpy (newfmt_p, "[%s:%s():%u] "); \
 			strcat (newfmt_p, fmt); \
 			fprintf (stderr, newfmt_p, fname_p, __func__, __LINE__, ##__VA_ARGS__); \
+			free (newfmt_p); \
 		} \
-		free (newfmt_p); \
 	}
 
 /* ------------------------------------------------------------------------- */
