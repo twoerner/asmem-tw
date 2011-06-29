@@ -29,6 +29,8 @@ static int updateInterval_G = DEFAULT_INTERVAL;
 
 #define STRSZ 32
 #define FNAMESZ 256
+#define WIDTH_PADDING 6
+#define MAXDIGITS 10
 
 #define VERBOSE(fmt, ...) \
 	if (verbose_G) { \
@@ -517,63 +519,64 @@ static void
 x11_draw_offscreen_win (void)
 {
 	int points[3];
-	unsigned int total;
-	unsigned int percentage;
-	unsigned long int freeMem;
-	unsigned int available;
-	int i;
-	unsigned int tmp[6];
-	int digits;
+	unsigned val;
+	unsigned tmp[MAXDIGITS];
+	unsigned i, digitCnt;
+	int winWidth;
 
 	VERBOSE ("\n");
 
+	// figure out the window width (based on xpm size)
+	winWidth = (int)backgroundXpm_G.attributes.width - WIDTH_PADDING;
+
+	// paint background
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, drawWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
-	total = fresh_G.memTotal;
-	digits = 0;
-	for (i=0; i<6; ++i) {
-		tmp[i] = total % 10;
-		total = total / 10;
-		++digits;
-		if (total == 0)
+
+	// string of total memory
+	val = fresh_G.memTotal;
+	digitCnt = 0;
+	for (i=0; i<MAXDIGITS; ++i) {
+		tmp[i] = val % 10;
+		val /= 10;
+		++digitCnt;
+		if (val == 0)
 			break;
 	}
-	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
+	for (i=0; i<digitCnt; ++i)
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, winWidth - (i * 5), 2);
 
-	freeMem = fresh_G.memFree + fresh_G.memBuffers + fresh_G.memCached;
-	freeMem = fresh_G.memTotal - freeMem;
-	available = freeMem;
-	digits = 0;
-	for (i=0; i<6; ++i) {
-		tmp[i] = available % 10;
-		available = available / 10;
-		++digits;
-		if (available == 0)
+	// string of memory used
+	val = fresh_G.memTotal - fresh_G.memFree;
+	digitCnt = 0;
+	for (i=0; i<MAXDIGITS; ++i) {
+		tmp[i] = val % 10;
+		val /= 10;
+		++digitCnt;
+		if (val == 0)
 			break;
 	}
-	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
+	for (i=0; i<digitCnt; ++i)
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digitCnt-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
 
-	if (fresh_G.memTotal)
-		percentage = (int)(((float)freeMem) / ((float)fresh_G.memTotal) * 100);
-	else
-		percentage = 0;
-	if (percentage >= 100)
-		tmp[0] = percentage / 100;
+	// string of percentage memory used
+	val = (int)((((float)fresh_G.memTotal) - ((float)fresh_G.memFree)) / ((float)fresh_G.memTotal) * 100);
+	if (val >= 100)
+		tmp[0] = val / 100;
 	else
 		tmp[0] = 13;
-	if (percentage >= 10)
-		tmp[1] = percentage % 100 / 10;
+	if (val >= 10)
+		tmp[1] = val % 100 / 10;
 	else
 		tmp[1] = 10;
-	tmp[2] = percentage % 100 % 10;
+	tmp[2] = val % 100 % 10;
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
 
-	points[0] = ((float)(fresh_G.memUsed - fresh_G.memBuffers - fresh_G.memCached)) / ((float)fresh_G.memTotal) * 46;
-	points[1] = ((float)fresh_G.memBuffers) / ((float)fresh_G.memTotal) * 46;
-	points[2] = ((float)fresh_G.memCached) / ((float)fresh_G.memTotal) * 46;
+	// draw the memory bar
+	points[0] = ((float)(fresh_G.memUsed - fresh_G.memBuffers - fresh_G.memCached)) / ((float)fresh_G.memTotal) * winWidth;
+	points[1] = ((float)fresh_G.memBuffers) / ((float)fresh_G.memTotal) * winWidth;
+	points[2] = ((float)fresh_G.memCached) / ((float)fresh_G.memTotal) * winWidth;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cMEM][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
@@ -590,50 +593,49 @@ x11_draw_offscreen_win (void)
 		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
-	total = fresh_G.swapTotal;
-	digits = 0;
-	for (i=0; i<6; ++i) {
-		tmp[i] = total % 10;
-		total = total / 10;
-		++digits;
-		if (total == 0)
+	// string of swap total
+	val = fresh_G.swapTotal;
+	digitCnt = 0;
+	for (i=0; i<MAXDIGITS; ++i) {
+		tmp[i] = val % 10;
+		val /= 10;
+		++digitCnt;
+		if (val == 0)
 			break;
 	}
-	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
+	for (i=0; i<digitCnt; ++i)
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, winWidth - (i * 5), 27);
 
-	freeMem = fresh_G.swapFree;
-	freeMem = fresh_G.swapTotal - freeMem;
-	available = freeMem;
-	digits = 0;
-	for (i=0; i<6; ++i) {
-		tmp[i] = available % 10;
-		available = available / 10;
-		++digits;
-		if (available == 0)
+	// string of swap used
+	val = fresh_G.swapTotal - fresh_G.swapFree;
+	digitCnt = 0;
+	for (i=0; i<MAXDIGITS; ++i) {
+		tmp[i] = val % 10;
+		val /= 10;
+		++digitCnt;
+		if (val == 0)
 			break;
 	}
-	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
+	for (i=0; i<digitCnt; ++i)
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digitCnt-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
 
-	if (fresh_G.swapTotal)
-		percentage = (int) (((float)freeMem) / ((float)fresh_G.swapTotal) * 100);
-	else
-		percentage = 0;
-	if (percentage >= 100)
-		tmp[0] = percentage / 100;
+	// string of percentage swap used
+	val = (int) ((((float)fresh_G.swapTotal) - ((float)fresh_G.swapFree)) / ((float)fresh_G.swapTotal) * 100);
+	if (val >= 100)
+		tmp[0] = val / 100;
 	else
 		tmp[0] = 13;
-	if (percentage >= 10)
-		tmp[1] = percentage % 100 / 10;
+	if (val >= 10)
+		tmp[1] = val % 100 / 10;
 	else
 		tmp[1] = 10;
-	tmp[2] = percentage % 100 % 10;
+	tmp[2] = val % 100 % 10;
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
 		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
 
-	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * 46;
+	// draw swap bar
+	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * winWidth;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[cSWP][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
@@ -757,7 +759,7 @@ x11_initialize (int argc, char *argv[])
 			y_negative = 1;
 	}
 
-	SizeHints.flags= USSize|USPosition;
+	SizeHints.flags= USSize | USPosition;
 	SizeHints.x = 0;
 	SizeHints.y = 0;
 	XWMGeometry (dpy_pG, screen, mainGeometry_G, NULL, 1, & SizeHints, &SizeHints.x, &SizeHints.y, &SizeHints.width, &SizeHints.height, &gravity);
