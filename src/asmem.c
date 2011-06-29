@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <getopt.h>
+#include <libgen.h>
 
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
@@ -28,6 +29,18 @@ static int updateInterval_G = DEFAULT_INTERVAL;
 
 #define STRSZ 32
 #define FNAMESZ 256
+
+#define VERBOSE(fmt, ...) \
+	if (verbose_G) { \
+		char *fname_p = basename (__FILE__); \
+		char *newfmt_p = (char*)malloc (strlen (fmt) + 32); \
+		if (newfmt_p) { \
+			strcpy (newfmt_p, "[%s:%s():%u] "); \
+			strcat (newfmt_p, fmt); \
+			fprintf (stderr, newfmt_p, fname_p, __func__, __LINE__, ##__VA_ARGS__); \
+		} \
+		free (newfmt_p); \
+	}
 
 /* ------------------------------------------------------------------------- */
 // prototypes
@@ -140,7 +153,6 @@ main (int argc, char *argv[])
 				continue;
 			}
 			x11_check_events ();
-			x11_draw_main_win_from_offscreen ();
 		}
 	}
 
@@ -313,8 +325,7 @@ get_num (char *marker_p)
 
 		if (strstr (buf, marker_p)) {
 			sscanf (buf, "%*s %lu %*s\n", &val);
-			if (verbose_G)
-				printf ("get_num() marker_p:%s val:%lu\n", marker_p, val);
+			VERBOSE ("get_num() marker_p:%s val:%lu\n", marker_p, val);
 			return val;
 		}
 	}
@@ -442,17 +453,14 @@ x11_darken_char_colour (char *colourName_p, float rate, Window win)
 {
 	XColor tmpColour;
 
-	if (verbose_G)
-		printf ("darkening %s ->", colourName_p);
+	VERBOSE ("darkening %s ->", colourName_p);
 	tmpColour = x11_parse_colour (colourName_p, win);
-	if (verbose_G)
-		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
+	VERBOSE (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 / rate;
 	tmpColour.green = tmpColour.green / 257 / rate;
 	tmpColour.blue = tmpColour.blue / 257 / rate;
 	sprintf (tmpChar_G, "#%.2x%.2x%.2x", (int)tmpColour.red, (int)tmpColour.green, (int)tmpColour.blue);
-	if (verbose_G)
-		printf ("-> %s\n", tmpChar_G);
+	VERBOSE ("-> %s\n", tmpChar_G);
 
 	return tmpChar_G;
 }
@@ -470,11 +478,9 @@ x11_lighten_char_colour (char *colourName_p, float rate, Window win)
 {
 	XColor tmpColour;
 
-	if (verbose_G)
-		printf ("lightening %s ->", colourName_p);
+	VERBOSE ("lightening %s ->", colourName_p);
 	tmpColour = x11_parse_colour (colourName_p, win);
-	if (verbose_G)
-		printf (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
+	VERBOSE (" #%x %x %x ", tmpColour.red, tmpColour.green, tmpColour.blue);
 	tmpColour.red = tmpColour.red / 257 * rate;
 	tmpColour.green = tmpColour.green / 257 * rate;
 	tmpColour.blue = tmpColour.blue / 257 * rate;
@@ -485,8 +491,7 @@ x11_lighten_char_colour (char *colourName_p, float rate, Window win)
 	if (tmpColour.blue > 255)
 		tmpColour.blue = 255;
 	sprintf (tmpChar_G, "#%.2x%.2x%.2x", (int)tmpColour.red, (int)tmpColour.green, (int)tmpColour.blue);
-	if (verbose_G)
-		printf ("-> %s\n", tmpChar_G);
+	VERBOSE ("-> %s\n", tmpChar_G);
 
 	return tmpChar_G;
 }
@@ -509,6 +514,8 @@ x11_draw_offscreen_win (void)
 	int i;
 	unsigned int tmp[6];
 	int digits;
+
+	VERBOSE ("\n");
 
 	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, drawWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	total = fresh_G.memTotal;
@@ -629,6 +636,8 @@ x11_check_events (void)
 {
 	XEvent event;
 
+	VERBOSE ("\n");
+
 	while (XPending (dpy_pG)) {
 		XNextEvent (dpy_pG, &event);
 		switch (event.type) {
@@ -639,16 +648,14 @@ x11_check_events (void)
 
 			case ClientMessage:
 				if ((event.xclient.message_type == wmProtocols_G) && (event.xclient.data.l[0] == wmDelWin_G)) {
-					if (verbose_G)
-						printf ("caught wmDelWin_G, closing\n");
+					VERBOSE ("caught wmDelWin_G, closing\n");
 					cleanup ();
 					exit (0);
 				}
 				break;
 
 			case VisibilityNotify:
-				if (verbose_G)
-					printf ("visibility state: %d\n", event.xvisibility.state);
+				VERBOSE ("visibility state: %d\n", event.xvisibility.state);
 				visible_G = ((event.xvisibility.state == VisibilityFullyObscured)? false : true);
 				break;
 
@@ -663,6 +670,7 @@ x11_check_events (void)
 static void
 x11_draw_main_win_from_offscreen (void)
 {
+	VERBOSE ("\n");
 	XCopyArea (dpy_pG, drawWin_G, mainWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	XCopyArea (dpy_pG, drawWin_G, iconWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 }
@@ -697,8 +705,7 @@ x11_initialize (int argc, char *argv[])
 	bgPix_G = x11_get_colour (bgColour_G, rootWin_G);
 	fgPix_G = x11_get_colour (fgColour_G, rootWin_G);
 	colourDepth = DefaultDepth (dpy_pG, screen);
-	if (verbose_G)
-		printf ("asmem : detected colour depth %d bpp, using %d bpp\n", colourDepth, colourDepth);
+	VERBOSE ("asmem : detected colour depth %d bpp, using %d bpp\n", colourDepth, colourDepth);
 
 	// adjust the background pixmap
 	sprintf (pgPixColour_G[3], "# c %s", fgColour_G);
@@ -715,8 +722,7 @@ x11_initialize (int argc, char *argv[])
 		cleanup ();
 		exit (1);
 	}
-	if (verbose_G)
-		printf ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
+	VERBOSE ("bg pixmap %d x %d\n", backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height);
 
 	sprintf (alphaColour_G[0], ". c %s", bgColour_G);
 	sprintf (alphaColour_G[1], "# c %s", fgColour_G);
