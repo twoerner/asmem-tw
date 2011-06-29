@@ -409,7 +409,6 @@ meminfo_update (void)
 		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
 		x11_draw_offscreen_win ();
 		x11_draw_main_win_from_offscreen ();
-		x11_check_events ();
 	}
 }
 
@@ -686,6 +685,7 @@ x11_draw_main_win_from_offscreen (void)
 	VERBOSE ("\n");
 	XCopyArea (dpy_pG, drawWin_G, mainWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	XCopyArea (dpy_pG, drawWin_G, iconWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
+	XFlush (dpy_pG);
 }
 
 static void
