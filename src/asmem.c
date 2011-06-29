@@ -70,6 +70,7 @@ static FILE *procMeminfoFile_pG = NULL;
 static char procMemFilename_G[FNAMESZ];
 static char tmpChar_G[STRSZ];
 static bool verbose_G = false;
+static bool visible_G = true;
 
 static char bgColour_G[STRSZ];
 static char fgColour_G[STRSZ];
@@ -129,6 +130,9 @@ main (int argc, char *argv[])
 
 		while (1) {
 			timeout = updateInterval_G;
+			if (!visible_G)
+				timeout = -1;
+
 			rtn = poll (fds, 1, timeout);
 			if (rtn == -1) {
 				perror ("poll()");
@@ -138,6 +142,7 @@ main (int argc, char *argv[])
 				x11_update ();
 				continue;
 			}
+			x11_check_events ();
 			asmem_redraw ();
 		}
 	}
@@ -608,6 +613,7 @@ x11_check_events (void)
 				if (event.xexpose.count == 0)
 					updateRequest_G = true;
 				break;
+
 			case ClientMessage:
 				if ((event.xclient.message_type == wmProtocols_G) && (event.xclient.data.l[0] == wmDelWin_G)) {
 					if (verbose_G)
@@ -615,6 +621,17 @@ x11_check_events (void)
 					cleanup ();
 					exit (0);
 				}
+				break;
+
+			case VisibilityNotify:
+				if (verbose_G)
+					printf ("visibility state: %d\n", event.xvisibility.state);
+				visible_G = ((event.xvisibility.state == VisibilityFullyObscured)? false : true);
+				break;
+
+			default:
+				if (event.type != NoExpose)
+					printf ("unhandled X11 event: %d\n", event.type);
 				break;
 		}
 	}
@@ -775,7 +792,7 @@ x11_initialize (int argc, char *argv[])
 	XStoreName (dpy_pG, mainWin_G, "asmem");
 	XSetIconName (dpy_pG, mainWin_G, "asmem");
 
-	status = XSelectInput (dpy_pG, mainWin_G, ExposureMask);
+	status = XSelectInput (dpy_pG, mainWin_G, ExposureMask | VisibilityChangeMask);
 	status = XSelectInput (dpy_pG, iconWin_G, ExposureMask);
 
 	// creating GC
