@@ -54,7 +54,7 @@ static char* x11_darken_char_colour (char *colourName_p, float rate, Display *dp
 static Pixel x11_darken_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
 static char* x11_lighten_char_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
 static Pixel x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win);
-static void x11_draw_offscreen_win (Window win);
+static void x11_draw_offscreen_win (void);
 static void x11_draw_main_win_from_offscreen (void);
 static void x11_check_events (void);
 static void x11_initialize (int argc, char *argv[]);
@@ -386,7 +386,7 @@ meminfo_update (void)
 
 	if (different) {
 		memcpy (&last_G, &fresh_G, sizeof (AsmemMeminfo_t));
-		x11_draw_offscreen_win (drawWin_G);
+		x11_draw_offscreen_win ();
 		updateRequest_G = true;
 	}
 
@@ -505,7 +505,7 @@ x11_lighten_colour (char *colourName_p, float rate, Display *dpy_p, Window win)
 }
 
 static void
-x11_draw_offscreen_win (Window win)
+x11_draw_offscreen_win (void)
 {
 	int points[3];
 	unsigned int total;
@@ -516,7 +516,7 @@ x11_draw_offscreen_win (Window win)
 	unsigned int tmp[6];
 	int digits;
 
-	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, win, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
+	XCopyArea (dpy_pG, backgroundXpm_G.pixmap, drawWin_G, mainGC_G, 0, 0, backgroundXpm_G.attributes.width, backgroundXpm_G.attributes.height, 0, 0);
 	total = fresh_G.total;
 	digits = 0;
 	for (i=0; i<6; ++i) {
@@ -527,7 +527,7 @@ x11_draw_offscreen_win (Window win)
 			break;
 	}
 	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 2);
 
 	freeMem = fresh_G.free + fresh_G.buffers + fresh_G.cached;
 	freeMem = fresh_G.total - freeMem;
@@ -541,7 +541,7 @@ x11_draw_offscreen_win (Window win)
 			break;
 	}
 	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 17);
 
 	if (fresh_G.total)
 		percentage = (int)(((float)freeMem) / ((float)fresh_G.total) * 100);
@@ -558,7 +558,7 @@ x11_draw_offscreen_win (Window win)
 	tmp[2] = percentage % 100 % 10;
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i]*5, 0, 6, 9, 32 + (i * 5), 17);
 
 	points[0] = ((float)(fresh_G.used - fresh_G.buffers - fresh_G.cached)) / ((float)fresh_G.total) * 46;
 	points[1] = ((float)fresh_G.buffers) / ((float)fresh_G.total) * 46;
@@ -566,17 +566,17 @@ x11_draw_offscreen_win (Window win)
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[0][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, win, mainGC_G, 3, 13 + i, points[0], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 13 + i, points[0], 1);
 	}
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[1][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0], 13 + i, points[1], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0], 13 + i, points[1], 1);
 	}
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[2][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, win, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3 + points[0] + points[1], 13 + i, points[2], 1);
 	}
 
 	total = fresh_G.swapTotal;
@@ -589,7 +589,7 @@ x11_draw_offscreen_win (Window win)
 			break;
 	}
 	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 46 - (i * 5), 27);
 
 	freeMem = fresh_G.swapFree;
 	freeMem = fresh_G.swapTotal - freeMem;
@@ -603,7 +603,7 @@ x11_draw_offscreen_win (Window win)
 			break;
 	}
 	for (i=0; i<digits; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[digits-1-i] * 5, 0, 6, 9, 2 + (i * 5), 42);
 
 	if (fresh_G.swapTotal)
 		percentage = (int) (((float)freeMem) / ((float)fresh_G.swapTotal) * 100);
@@ -620,13 +620,13 @@ x11_draw_offscreen_win (Window win)
 	tmp[2] = percentage % 100 % 10;
 	tmp[3] = 11;
 	for (i=0; i<4; ++i)
-		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, win, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
+		XCopyArea (dpy_pG, alphabetXpm_G.pixmap, drawWin_G, mainGC_G, tmp[i] * 5, 0, 6, 9, 32 + (i * 5), 42);
 
 	points[0] = ((float)fresh_G.swapUsed) / ((float)fresh_G.swapTotal) * 46;
 	for (i=0; i<3; ++i) {
 		mainGCV_G.foreground = pix_G[3][i];
 		XChangeGC (dpy_pG, mainGC_G, GCForeground, &mainGCV_G);
-		XFillRectangle (dpy_pG, win, mainGC_G, 3, 38 + i, points[0], 1);
+		XFillRectangle (dpy_pG, drawWin_G, mainGC_G, 3, 38 + i, points[0], 1);
 	}
 }
 
